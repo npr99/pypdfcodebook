@@ -1,0 +1,47 @@
+Steps to replicate:(Reference - ChatGPT)
+
+1. Make sure you have following directory structure:
+/<your package name>/
+  ├── <your package name>/
+  │    └── __init__.py  # <-- Your code here!
+  └── pyproject.toml    # <-- Packaging config
+  
+2. Edit pyproject.toml 
+-  Add your own Email ID and name in "authors" 
+-  "name" should be unique, so avoid common names as those probably already exist as a test package. This is one of the main reasons there could be an issue in test package creation.
+
+Snippet of the file:
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ruchika-shukla-test-package-072720252 <- change this, I have kept this for reference. avoid common names like test_package. Keep this same as directory name you used for your root as in step 1"
+version = "0.2.2"
+description = "test package"
+authors = [{name="add your name <- change this", email="add your mail <- change this"}]
+readme = "README.md"
+requires-python = ">=3.8"
+
+3. In cmd, go to your project root using -> cd project/root (just a sample directory, replace with project root directory):
+Now run:
+python -m build
+
+4. Make a TestPyPI Account here - https://test.pypi.org/account/register/
+
+5. Setup API Token:
+Go to https://test.pypi.org/manage/account/ -> API Tokens -> Add API Token
+
+6. Install twine using pip:
+pip install --upgrade build twine (I have not tried using conda)
+
+7. Upload package to TestPyPI using twine:
+twine upload --repository testpypi dist/*
+
+8. Go to https://test.pypi.org/manage/projects/ and click on your project that you uploaded. Get the installation command. 
+For example, pip install -i https://test.pypi.org/simple/ ruchika-shukla-test-package-07272025
+Install using this command and verify post installation!
+
+9. Smoke Test using python -c "import <your package name> as pkg; print('2 + 3 =', pkg.add_num(2, 3))"
+
+

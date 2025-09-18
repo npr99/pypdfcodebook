@@ -1,0 +1,6 @@
+pyproject.toml
+pycodebook_20250806.egg-info/PKG-INFO
+pycodebook_20250806.egg-info/SOURCES.txt
+pycodebook_20250806.egg-info/dependency_links.txt
+pycodebook_20250806.egg-info/top_level.txt
+sample_test_package/__init__.py

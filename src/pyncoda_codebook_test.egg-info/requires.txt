@@ -1,0 +1,12 @@
+
+[dev]
+pytest
+black
+
+[docs]
+sphinx
+mkdocs
+
+[test]
+pytest
+coverage
