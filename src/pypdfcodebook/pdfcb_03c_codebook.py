@@ -1,10 +1,11 @@
 import pandas as pd
 import numpy as np
 import csv
-import random # used for selecting random examples of
+import random
 
-from pyncoda.ncoda_06a_PDF_functions import PDF, TitleStyle
-from pyncoda.ncoda_04a_Figures import income_distribution
+from pypdfcodebook.pdfcb_03b_pdffunctions import PDF, TitleStyle
+from pypdfcodebook.pdfcb_03a_figures import income_distribution
+
 
 class codebook():
     """

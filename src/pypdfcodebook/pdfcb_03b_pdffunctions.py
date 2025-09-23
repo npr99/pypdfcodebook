@@ -1,7 +1,6 @@
 import csv
 from fpdf import FPDF, TitleStyle
 
-
 """
 Help to make Codebook PDF
 https://pyfpdf.github.io/fpdf2/Tutorial.html#tuto-5-creating-tables
@@ -17,7 +16,6 @@ https://www.rapidtables.com/web/color/RGB_Color.html
 
 Possible alternative to fpdf
 https://github.com/jorisschellekens/borb
-
 """
 
 # Header is a FPDF2 function that is called with addpage

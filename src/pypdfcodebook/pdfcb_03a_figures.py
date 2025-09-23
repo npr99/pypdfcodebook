@@ -1,11 +1,9 @@
 import seaborn as sns
-import matplotlib.pyplot as plt # For plotting and making graphs
+import matplotlib.pyplot as plt
 from matplotlib.ticker import StrMethodFormatter
 import matplotlib.ticker as ticker
-
 import pandas as pd
 from IPython import display
-
 
 def income_distribution(input_df,
                         variable: str = "randincome",
