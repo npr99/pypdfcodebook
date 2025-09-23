@@ -7,13 +7,13 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pyncoda-codebook-test"
+name = "pypdfcodebook"
 version = "0.3.0"
 description = "Package that generates a PDF codebook based on specified data structure and datafile."
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MPL-2.0" }
-keywords = ["codebook", "pdf", "pyncoda"]
+keywords = ["codebook", "pdf", "pypdfcodebook"]
 authors = [{ name = "Nathanael Rosenheim", email = "nrosenheim@gmail.com" }]
 maintainers = [{ name = "Nathanael Rosenheim", email = "nrosenheim@gmail.com" }]
 classifiers = [
@@ -43,6 +43,6 @@ test = ["pytest", "coverage"]  # For testing and code coverage
 docs = ["sphinx", "mkdocs"]    # For generating documentation
 
 [project.urls]
-"Homepage" = "https://github.com/npr99/pyncoda-codebook"
-"Repository" = "https://github.com/npr99/pyncoda-codebook"
-"Bug Reports" = "https://github.com/npr99/pyncoda-codebook/issues"
+"Homepage" = "https://github.com/npr99/pypdfcodebook"
+"Repository" = "https://github.com/npr99/pypdfcodebook"
+"Bug Reports" = "https://github.com/npr99/pypdfcodebook/issues"
