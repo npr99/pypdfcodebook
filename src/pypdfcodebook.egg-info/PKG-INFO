@@ -1,0 +1,39 @@
+Metadata-Version: 2.4
+Name: pypdfcodebook
+Version: 0.3.4
+Summary: Package that generates a PDF codebook based on specified data structure and datafile.
+Author-email: Nathanael Rosenheim <nrosenheim@gmail.com>
+Maintainer-email: Nathanael Rosenheim <nrosenheim@gmail.com>
+License: MPL-2.0
+Project-URL: Homepage, https://github.com/npr99/pypdfcodebook
+Project-URL: Repository, https://github.com/npr99/pypdfcodebook
+Project-URL: Bug Reports, https://github.com/npr99/pypdfcodebook/issues
+Keywords: codebook,pdf,pypdfcodebook
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Science/Research
+Classifier: Topic :: Scientific/Engineering
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: pandas>=2.2
+Requires-Dist: numpy>=1.26
+Requires-Dist: fpdf2>=2.7
+Requires-Dist: seaborn>=0.12
+Provides-Extra: dev
+Requires-Dist: pytest; extra == "dev"
+Requires-Dist: black; extra == "dev"
+Provides-Extra: test
+Requires-Dist: pytest; extra == "test"
+Requires-Dist: coverage; extra == "test"
+Provides-Extra: docs
+Requires-Dist: sphinx; extra == "docs"
+Requires-Dist: mkdocs; extra == "docs"
+Dynamic: license-file
+
+# pypdfcodebook
+A Python package for generating PDF codebooks from tabular data. Quickly create project descriptions, data dictionaries, and variable summaries with customizable formatting. Ideal for data science, reproducible research, and sharing dataset documentation.
