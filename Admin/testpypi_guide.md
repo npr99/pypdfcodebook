@@ -13,6 +13,11 @@ conda create -n pypdfcodebook python=3.12
 conda activate pypdfcodebook
 ```
 
+## 2a. (Recommended) Upgrade pip
+```sh
+python -m pip install --upgrade pip
+```
+
 ## 3. Install Core Packages with Conda
 ```sh
 conda install numpy pandas seaborn
@@ -57,10 +62,16 @@ twine upload --repository testpypi dist/*
 ```
 
 ## 9. Test Install from TestPyPI
+If you are re-installing in an existing environment, uninstall first:
 ```sh
 pip uninstall pypdfcodebook
+```
+Then install the latest version (using --no-cache-dir to avoid pip cache issues):
+```sh
 pip install --upgrade --no-cache-dir --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple pypdfcodebook
 ```
+If you do not get the expected version, try again after a few minutes or check the [TestPyPI project page](https://test.pypi.org/project/pypdfcodebook/) to verify the upload.
+
 
 ## 10. Test the Installed Package in Python
 After installing, open a Python interpreter and run:
@@ -76,10 +87,24 @@ exit()
 ```
 If you see the version number and no errors, the install was successful.
 
+
+## 11. (Optional) Run Tests
+If you have a test suite, first install pytest (if not already installed):
+```sh
+pip install pytest
+```
+Then run:
+```sh
+pytest
+```
+
+
 ## Notes
 - Always specify dependencies in `pyproject.toml` for your users.
 - Use conda for your own environment setup for best performance with scientific packages.
 - If you want to provide a ready-to-use conda environment, consider creating an `environment.yml` file.
+- Never commit your `.pypirc` file or API tokens to version control. Keep them in your home directory and add `.pypirc` to your `.gitignore` if needed.
+- For more help, see the [TestPyPI documentation](https://test.pypi.org/help/).
 
 ---
 *Maintained by project admin. Last updated: 2025-09-23.*
