@@ -3,8 +3,8 @@ import numpy as np
 import csv
 import random
 
-from pypdfcodebook.pdf_functions import PDF, TitleStyle
-from pypdfcodebook.figures import income_distribution
+from pypdfcodebook.pdfcb_03b_pdffunctions import PDF, TitleStyle
+from pypdfcodebook.pdfcb_03a_figures import income_distribution
 
 
 class codebook():
