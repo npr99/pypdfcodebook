@@ -2,9 +2,9 @@ import pandas as pd
 import numpy as np
 import csv
 import random
+from fpdf import FPDF, TitleStyle 
 
-from pypdfcodebook.pdfcb_03b_pdffunctions import PDF, TitleStyle
-from pypdfcodebook.pdfcb_03a_figures import income_distribution
+from pypdfcodebook.pdfcb_03b_pdffunctions import PDF
 
 
 class codebook():
@@ -23,7 +23,7 @@ class codebook():
             output_filename,
             outputfolders = {},
             seed = 15151,
-            figures = '',
+            figures = None,
             image_path = ""):
 
         self.input_df = input_df
@@ -109,34 +109,6 @@ class codebook():
 
         pdf.add_page() 
 
-    @staticmethod
-    def county_list_for_filename(communities,community):
-        """
-        the FIPS Codes need to be seperated by a _
-        """
-        counties_to_display = []
-        for county in communities[community]['counties'].keys():
-            state_county = communities[community]['counties'][county]['FIPS Code']
-            counties_to_display.append(state_county)
-
-        counties_to_display_joined = "_".join(counties_to_display)
-
-        return counties_to_display_joined    
-
-    @staticmethod
-    def county_list_for_datacensusgov(communities,community):
-        """
-        data.census.gov can display multiple geographies
-        the FIPS Codes need to be separated by a comma
-        """
-        counties_to_display = []
-        for county in communities[community]['counties'].keys():
-            state_county = communities[community]['counties'][county]['FIPS Code']
-            counties_to_display.append(state_county)
-
-        counties_to_display_joined = ",".join(counties_to_display)
-
-        return counties_to_display_joined
 
     def create_data_dictionary_table(self):
         table_rows = []
@@ -544,11 +516,8 @@ class codebook():
                     line_space = 1.75)
             # Add notes
             notes = self.datastructure[variable]['notes'] 
-            # Add county fips to hyperlinks in notes
-            if '{state_county}' in notes:
-                county_list = self.county_list_for_datacensusgov(self.communities,self.community)
-                #print('adding',county_list,'to',notes)
-                notes = notes.format(state_county = county_list)
+            # If notes contain placeholders, user must provide formatted notes.
+            # No automatic county FIPS insertion.
             pdf.cell(w = 0, h = 10, txt = f"Variable Notes: {variable}", border = 0, ln = 1)
             pdf.multi_cell(0, 3, notes, ln = 3, align = 'L',
                             max_line_height=pdf.font_size*2)
@@ -556,25 +525,7 @@ class codebook():
 
             pdf.add_page()
 
-    def add_figure_by_variable(self,pdf,variable,by_variable): 
-        # Add figure
-        countylist = self.county_list_for_filename(self.communities,self.community)
-        filename = variable+'_by_'+by_variable+countylist+'.png'
-        filepath = self.outputfolders['Explore']+"/"+filename
-        print(filepath)
-        try:
-            pdf.image(filepath, w=pdf.epw)
-        except:
-            print('Could not add image')
-    
-    def add_figure_filename(self,pdf,filename): 
-        # Add figure
-        filepath = self.outputfolders['Explore']+"/"+filename
-        print(filepath)
-        try:
-            pdf.image(filepath, w=pdf.epw)
-        except:
-            print('Could not add image')
+
 
     def create_codebook(self):
         """
@@ -620,18 +571,7 @@ class codebook():
             ),
         )
         pdf.add_page()
-        # Try to add figures
-        try:
-            if self.figures != '':
-                # Check if self.figures is a list
-                if isinstance(self.figures, list):
-                    # Add first figure in list to cover page
-                    print('Adding first figure to cover page:',self.figures[0])
-                    self.add_figure_filename(pdf,self.figures[0])
-                else:
-                    self.add_figure_by_variable(pdf,variable = 'randincome',by_variable='race')
-        except:
-            print('Could not add figures')
+
             
         # Add Table of Contents
         pdf.insert_toc_placeholder(self.render_toc,pages=1)
@@ -647,23 +587,9 @@ class codebook():
         # Add Variable Details and Notes
         self.add_var_summary(pdf)
 
-        # Try to make figure and add to codebook
-        try:
-            if self.figures != '':
-                # Add figures
-                pdf.start_section("Explore Data - Figures")
-                if isinstance(self.figures, list):
-                    for figure in self.figures:
-                        self.add_figure_filename(pdf,figure)
-                else:
-                    self.add_figure_by_variable(pdf,variable = 'randincome',by_variable='race')        
-                    # Add figure
-                    self.add_figure_by_variable(pdf,variable = 'randincome',by_variable='hispan')        
-                    # Add figure
-                    pdf.add_page()
-                    self.add_figure_by_variable(pdf,variable = 'randincome',by_variable='family')   
-        except:
-            print('Could not add figure')
+
+        # If user provides figures, they must handle figure addition themselves.
+        # This codebook does not generate or add figures automatically.
 
         # Add Key Terms and Definitions
         if self.keyterms != '':

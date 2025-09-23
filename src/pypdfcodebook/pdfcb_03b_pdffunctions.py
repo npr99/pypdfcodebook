@@ -1,5 +1,5 @@
 import csv
-from fpdf import FPDF, TitleStyle
+from fpdf import FPDF 
 
 """
 Help to make Codebook PDF
