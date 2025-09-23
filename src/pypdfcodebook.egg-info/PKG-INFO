@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: pypdfcodebook
-Version: 0.3.0
+Version: 0.3.1
 Summary: Package that generates a PDF codebook based on specified data structure and datafile.
 Author-email: Nathanael Rosenheim <nrosenheim@gmail.com>
 Maintainer-email: Nathanael Rosenheim <nrosenheim@gmail.com>
@@ -15,12 +15,15 @@ Classifier: Topic :: Scientific/Engineering
 Classifier: Programming Language :: Python :: 3
 Classifier: Programming Language :: Python :: 3.9
 Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
 Requires-Python: >=3.9
 Description-Content-Type: text/markdown
 License-File: LICENSE
 Requires-Dist: pandas>=2.2
 Requires-Dist: numpy>=1.26
 Requires-Dist: fpdf2>=2.7
+Requires-Dist: seaborn>=0.12
 Provides-Extra: dev
 Requires-Dist: pytest; extra == "dev"
 Requires-Dist: black; extra == "dev"
