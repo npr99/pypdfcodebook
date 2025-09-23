@@ -43,8 +43,8 @@ python -m build
 ```sh
 twine upload --repository testpypi dist/*
 ```
-- Before uploading, increment the version number in your `pyproject.toml` (each upload to TestPyPI must have a unique version).
-- Also update the `__version__` variable in `src/pypdfcodebook/__init__.py` to match the new version number.
+- Before uploading, increment the version number in the `__version__` variable in `src/pypdfcodebook/__init__.py` (each upload to TestPyPI must have a unique version).
+- The version in `pyproject.toml` is now set automatically from your code, so you only need to update it in one place.
 - Make sure your `.pypirc` file is set up with your TestPyPI token. See [pypirc_instructions.md](pypirc_instructions.md) for setup details.
 
 
@@ -60,6 +60,7 @@ import pypdfcodebook
 print(pypdfcodebook.__version__)
 # Optionally, test a function:
 # pypdfcodebook.add_one(1)
+exit()
 ```
 If you see the version number and no errors, the install was successful.
 
