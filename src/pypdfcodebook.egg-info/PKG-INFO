@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: pypdfcodebook
-Version: 0.3.1
+Version: 0.3.4
 Summary: Package that generates a PDF codebook based on specified data structure and datafile.
 Author-email: Nathanael Rosenheim <nrosenheim@gmail.com>
 Maintainer-email: Nathanael Rosenheim <nrosenheim@gmail.com>

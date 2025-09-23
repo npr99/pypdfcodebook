@@ -32,25 +32,34 @@ pip install build twine fpdf2
 Before building, delete any old files in the `dist/` directory to avoid uploading duplicate versions:
 ```powershell
 Remove-Item dist\* -Force
+Remove-Item build\* -Recurse -Force
 ```
+
+### CHECK VERSION
+- Before uploading, increment the version number in both `pyproject.toml` (under `[project] version`) and the `__version__` variable in `src/pypdfcodebook/__init__.py` (each upload to TestPyPI must have a unique version).
+- These two version numbers must always match for consistency and to avoid confusion for users and tools.
+
+### CHECK API KEY
+- Log into https://test.pypi.org/ (note will need to get authentication code from DUO)
+- Under: https://test.pypi.org/manage/account/ scroll down to API tokens
+- Make sure your `.pypirc` file is set up with your TestPyPI token. See [pypirc_instructions.md](pypirc_instructions.md) for setup details.
 
 ## 7. Build Your Package
 ```sh
 python -m build
 ```
 
+_NOTE_: Check that the version in the terminal output (e.g., `Successfully built pypdfcodebook-0.3.1.tar.gz`) matches the version set in both `pyproject.toml` and `src/pypdfcodebook/__init__.py`.
+
 ## 8. Upload to TestPyPI
 ```sh
 twine upload --repository testpypi dist/*
 ```
-- Before uploading, increment the version number in the `__version__` variable in `src/pypdfcodebook/__init__.py` (each upload to TestPyPI must have a unique version).
-- The version in `pyproject.toml` is now set automatically from your code, so you only need to update it in one place.
-- Make sure your `.pypirc` file is set up with your TestPyPI token. See [pypirc_instructions.md](pypirc_instructions.md) for setup details.
-
 
 ## 9. Test Install from TestPyPI
 ```sh
-pip install --upgrade --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple pypdfcodebook
+pip uninstall pypdfcodebook
+pip install --upgrade --no-cache-dir --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple pypdfcodebook
 ```
 
 ## 10. Test the Installed Package in Python
@@ -59,7 +68,10 @@ After installing, open a Python interpreter and run:
 import pypdfcodebook
 print(pypdfcodebook.__version__)
 # Optionally, test a function:
-# pypdfcodebook.add_one(1)
+from pypdfcodebook.simple import add_one
+add_one(1)
+from pypdfcodebook.pdfcb_03a_figures import county_list_for_datacensusgov
+help(county_list_for_datacensusgov)
 exit()
 ```
 If you see the version number and no errors, the install was successful.
