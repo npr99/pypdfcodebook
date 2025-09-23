@@ -28,11 +28,11 @@ classifiers = [
 # Dependencies required to run the package
 # issues with using pip to manage dependencies
 # manually set up environment 
-#dependencies = [
-#    "pandas>=2.2",
-#    "numpy>=1.26",
-#    "fpdf2>=2.7"
-#]
+dependencies = [
+  "pandas>=2.2",
+  "numpy>=1.26",
+  "fpdf2>=2.7"
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
