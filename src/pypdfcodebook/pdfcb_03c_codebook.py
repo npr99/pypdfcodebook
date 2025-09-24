@@ -2,9 +2,9 @@ import pandas as pd
 import numpy as np
 import csv
 import random
+from fpdf import FPDF, TitleStyle 
 
-from pypdfcodebook.pdfcb_03b_pdffunctions import PDF, TitleStyle
-from pypdfcodebook.pdfcb_03a_figures import income_distribution
+from pypdfcodebook.pdfcb_03b_pdffunctions import PDF
 
 
 class codebook():
@@ -23,7 +23,7 @@ class codebook():
             output_filename,
             outputfolders = {},
             seed = 15151,
-            figures = '',
+            figures = None,
             image_path = ""):
 
         self.input_df = input_df
@@ -109,34 +109,6 @@ class codebook():
 
         pdf.add_page() 
 
-    @staticmethod
-    def county_list_for_filename(communities,community):
-        """
-        the FIPS Codes need to be seperated by a _
-        """
-        counties_to_display = []
-        for county in communities[community]['counties'].keys():
-            state_county = communities[community]['counties'][county]['FIPS Code']
-            counties_to_display.append(state_county)
-
-        counties_to_display_joined = "_".join(counties_to_display)
-
-        return counties_to_display_joined    
-
-    @staticmethod
-    def county_list_for_datacensusgov(communities,community):
-        """
-        data.census.gov can display multiple geographies
-        the FIPS Codes need to be separated by a comma
-        """
-        counties_to_display = []
-        for county in communities[community]['counties'].keys():
-            state_county = communities[community]['counties'][county]['FIPS Code']
-            counties_to_display.append(state_county)
-
-        counties_to_display_joined = ",".join(counties_to_display)
-
-        return counties_to_display_joined
 
     def create_data_dictionary_table(self):
         table_rows = []
@@ -256,8 +228,11 @@ class codebook():
         Function produces a string variable details a string/object variable
         """    
 
-        # Check if variable is a string
+        # Check if variable is a string - if not, convert to string for processing
         if self.input_df[variable].dtype == 'object':
+            describe_var = self.input_df[variable].astype(str)
+        else:
+            # For non-string variables, convert to string for processing
             describe_var = self.input_df[variable].astype(str)
         # Collect key characteristics of variable
         total_cases = len(describe_var)
@@ -422,6 +397,10 @@ class codebook():
             categories_df.reset_index(inplace = True)
             # Rename columns
             categories_df = categories_df.rename(columns={'index':'Code'})            
+        else:
+            # If no categories dictionary exists, create empty dataframe with just codes
+            unique_codes = count_table['Code'].unique()
+            categories_df = pd.DataFrame({'Code': unique_codes, 'Label': unique_codes})
 
         # Merge count and categories tables
         categorical_table = \
@@ -531,50 +510,33 @@ class codebook():
                 if ncols == 6:
                     cell_widths = [12,pdf.epw-(12+24+24+18+18),
                                    24,24,18,18]
-                if ncols == 5:
+                elif ncols == 5:
                     cell_widths = [12,pdf.epw-(12+24+24+30),30,
                                    24,24]   
-                if ncols == 4:
+                elif ncols == 4:
                     cell_widths = [12,pdf.epw-(12+24+24),
-                                   24,24]                
+                                   24,24]
+                else:
+                    # Default case: distribute columns evenly
+                    cell_widths = 'even'                
                 pdf.create_table(table_data = table_data, title=title, 
                     data_size= 10, title_size = 12,
                     align_data = 'R', align_header = 'C', 
                     cell_width=cell_widths,
                     line_space = 1.75)
             # Add notes
-            notes = self.datastructure[variable]['notes'] 
-            # Add county fips to hyperlinks in notes
-            if '{state_county}' in notes:
-                county_list = self.county_list_for_datacensusgov(self.communities,self.community)
-                #print('adding',county_list,'to',notes)
-                notes = notes.format(state_county = county_list)
-            pdf.cell(w = 0, h = 10, txt = f"Variable Notes: {variable}", border = 0, ln = 1)
-            pdf.multi_cell(0, 3, notes, ln = 3, align = 'L',
-                            max_line_height=pdf.font_size*2)
-            pdf.ln()
+            if 'notes' in self.datastructure[variable]:
+                notes = self.datastructure[variable]['notes'] 
+                # If notes contain placeholders, user must provide formatted notes.
+                # No automatic county FIPS insertion.
+                pdf.cell(w = 0, h = 10, text = f"Variable Notes: {variable}", border = 0, ln = 1)
+                pdf.multi_cell(0, 3, notes, ln = 3, align = 'L',
+                                max_line_height=pdf.font_size*2)
+                pdf.ln()
 
             pdf.add_page()
 
-    def add_figure_by_variable(self,pdf,variable,by_variable): 
-        # Add figure
-        countylist = self.county_list_for_filename(self.communities,self.community)
-        filename = variable+'_by_'+by_variable+countylist+'.png'
-        filepath = self.outputfolders['Explore']+"/"+filename
-        print(filepath)
-        try:
-            pdf.image(filepath, w=pdf.epw)
-        except:
-            print('Could not add image')
-    
-    def add_figure_filename(self,pdf,filename): 
-        # Add figure
-        filepath = self.outputfolders['Explore']+"/"+filename
-        print(filepath)
-        try:
-            pdf.image(filepath, w=pdf.epw)
-        except:
-            print('Could not add image')
+
 
     def create_codebook(self):
         """
@@ -620,18 +582,7 @@ class codebook():
             ),
         )
         pdf.add_page()
-        # Try to add figures
-        try:
-            if self.figures != '':
-                # Check if self.figures is a list
-                if isinstance(self.figures, list):
-                    # Add first figure in list to cover page
-                    print('Adding first figure to cover page:',self.figures[0])
-                    self.add_figure_filename(pdf,self.figures[0])
-                else:
-                    self.add_figure_by_variable(pdf,variable = 'randincome',by_variable='race')
-        except:
-            print('Could not add figures')
+
             
         # Add Table of Contents
         pdf.insert_toc_placeholder(self.render_toc,pages=1)
@@ -647,23 +598,9 @@ class codebook():
         # Add Variable Details and Notes
         self.add_var_summary(pdf)
 
-        # Try to make figure and add to codebook
-        try:
-            if self.figures != '':
-                # Add figures
-                pdf.start_section("Explore Data - Figures")
-                if isinstance(self.figures, list):
-                    for figure in self.figures:
-                        self.add_figure_filename(pdf,figure)
-                else:
-                    self.add_figure_by_variable(pdf,variable = 'randincome',by_variable='race')        
-                    # Add figure
-                    self.add_figure_by_variable(pdf,variable = 'randincome',by_variable='hispan')        
-                    # Add figure
-                    pdf.add_page()
-                    self.add_figure_by_variable(pdf,variable = 'randincome',by_variable='family')   
-        except:
-            print('Could not add figure')
+
+        # If user provides figures, they must handle figure addition themselves.
+        # This codebook does not generate or add figures automatically.
 
         # Add Key Terms and Definitions
         if self.keyterms != '':
