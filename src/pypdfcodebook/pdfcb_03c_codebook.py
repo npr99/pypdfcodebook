@@ -228,8 +228,11 @@ class codebook():
         Function produces a string variable details a string/object variable
         """    
 
-        # Check if variable is a string
+        # Check if variable is a string - if not, convert to string for processing
         if self.input_df[variable].dtype == 'object':
+            describe_var = self.input_df[variable].astype(str)
+        else:
+            # For non-string variables, convert to string for processing
             describe_var = self.input_df[variable].astype(str)
         # Collect key characteristics of variable
         total_cases = len(describe_var)
@@ -515,13 +518,14 @@ class codebook():
                     cell_width=cell_widths,
                     line_space = 1.75)
             # Add notes
-            notes = self.datastructure[variable]['notes'] 
-            # If notes contain placeholders, user must provide formatted notes.
-            # No automatic county FIPS insertion.
-            pdf.cell(w = 0, h = 10, txt = f"Variable Notes: {variable}", border = 0, ln = 1)
-            pdf.multi_cell(0, 3, notes, ln = 3, align = 'L',
-                            max_line_height=pdf.font_size*2)
-            pdf.ln()
+            if 'notes' in self.datastructure[variable]:
+                notes = self.datastructure[variable]['notes'] 
+                # If notes contain placeholders, user must provide formatted notes.
+                # No automatic county FIPS insertion.
+                pdf.cell(w = 0, h = 10, txt = f"Variable Notes: {variable}", border = 0, ln = 1)
+                pdf.multi_cell(0, 3, notes, ln = 3, align = 'L',
+                                max_line_height=pdf.font_size*2)
+                pdf.ln()
 
             pdf.add_page()
 

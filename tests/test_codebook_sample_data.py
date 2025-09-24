@@ -21,8 +21,9 @@ def test_codebook_with_sample_data(tmp_path):
     datastructure = ds_module.DATA_STRUCTURE
 
     # Set up output
-    output_filename = tmp_path / "test_codebook.pdf"
-    outputfolders = [str(tmp_path)]
+    output_filename_path = tmp_path / "test_codebook.pdf"
+    output_filename = "test_codebook"  # Just the name without extension
+    outputfolders = {'top': str(tmp_path)}
 
     # Provide valid test values for communities and community
     communities = {'test_comm': {'community_name': 'Test Community'}}
@@ -37,12 +38,12 @@ def test_codebook_with_sample_data(tmp_path):
         communities=communities,
         community=community,
         year=2020,
-        output_filename=str(output_filename),
+        output_filename=output_filename,
         outputfolders=outputfolders,
         figures=None,      # or your test value
-        image_path=None    # or your test value
+        image_path=""      # empty string instead of None to avoid file error
     )
     pdfcodebook.create_codebook()
 
     # Assert output file was created
-    assert output_filename.exists()
+    assert output_filename_path.exists()
