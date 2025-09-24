@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import csv
 import random
+from datetime import datetime
 from fpdf import FPDF, TextStyle
 from typing import Dict, List, Union, Optional, Any
 
@@ -556,9 +557,12 @@ class codebook():
         header_text = self.header_title
         print(f"Creating codebook: {header_text}")
         
+        # Generate timestamp for footer reproducibility
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
         pdf = PDF(
             header_text = header_text,
-            footer_text = f"{self.output_filename}",
+            footer_text = f"{self.output_filename} | Generated: {timestamp}",
             image_path = self.image_path)
         
         pdf.set_margins(left = 15, top = 10)
