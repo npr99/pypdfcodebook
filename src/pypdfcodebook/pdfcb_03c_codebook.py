@@ -397,6 +397,10 @@ class codebook():
             categories_df.reset_index(inplace = True)
             # Rename columns
             categories_df = categories_df.rename(columns={'index':'Code'})            
+        else:
+            # If no categories dictionary exists, create empty dataframe with just codes
+            unique_codes = count_table['Code'].unique()
+            categories_df = pd.DataFrame({'Code': unique_codes, 'Label': unique_codes})
 
         # Merge count and categories tables
         categorical_table = \
@@ -506,12 +510,15 @@ class codebook():
                 if ncols == 6:
                     cell_widths = [12,pdf.epw-(12+24+24+18+18),
                                    24,24,18,18]
-                if ncols == 5:
+                elif ncols == 5:
                     cell_widths = [12,pdf.epw-(12+24+24+30),30,
                                    24,24]   
-                if ncols == 4:
+                elif ncols == 4:
                     cell_widths = [12,pdf.epw-(12+24+24),
-                                   24,24]                
+                                   24,24]
+                else:
+                    # Default case: distribute columns evenly
+                    cell_widths = 'even'                
                 pdf.create_table(table_data = table_data, title=title, 
                     data_size= 10, title_size = 12,
                     align_data = 'R', align_header = 'C', 
@@ -522,7 +529,7 @@ class codebook():
                 notes = self.datastructure[variable]['notes'] 
                 # If notes contain placeholders, user must provide formatted notes.
                 # No automatic county FIPS insertion.
-                pdf.cell(w = 0, h = 10, txt = f"Variable Notes: {variable}", border = 0, ln = 1)
+                pdf.cell(w = 0, h = 10, text = f"Variable Notes: {variable}", border = 0, ln = 1)
                 pdf.multi_cell(0, 3, notes, ln = 3, align = 'L',
                                 max_line_height=pdf.font_size*2)
                 pdf.ln()

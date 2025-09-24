@@ -50,7 +50,7 @@ class PDF(FPDF):
         # Printing title:
         self.cell(w = 30, 
                   h = 10, 
-                  txt = self.header_text, 
+                  text = self.header_text, 
                   border = 0, ln = 0, align = "C")
         # Performing a line break:
         self.ln(15)
@@ -67,10 +67,10 @@ class PDF(FPDF):
         # Printing page number:
         self.ln(23)
         self.cell(w = 0, h = 10, 
-                    txt = f"Page {self.page_no()}/{{nb}}",
+                    text = f"Page {self.page_no()}/{{nb}}",
                     border = 0, ln = 0, align = "C")
         self.ln()
-        self.cell(w = 0, h = 0, txt = self.footer_text, 
+        self.cell(w = 0, h = 0, text = self.footer_text, 
                     border = 0, ln = 0, align = "C")
 
     ## TABLE FUNCTIONS
@@ -175,7 +175,12 @@ class PDF(FPDF):
         # Add header row
         for i in range(len(header)):
             datum = header[i]
-            self.multi_cell(col_width[i], line_height, 
+            # Handle both single width and list of widths
+            if isinstance(col_width, list):
+                width = col_width[i]
+            else:
+                width = col_width
+            self.multi_cell(width, line_height, 
                     datum, border=0, 
                     align=align_header, ln=3, 
                     max_line_height=self.font_size)
@@ -197,7 +202,11 @@ class PDF(FPDF):
                 datum = row[i]
                 if not isinstance(datum, str):
                     datum = str(datum)
-                adjusted_col_width = col_width[i]
+                # Handle both single width and list of widths
+                if isinstance(col_width, list):
+                    adjusted_col_width = col_width[i]
+                else:
+                    adjusted_col_width = col_width
                 self.multi_cell(adjusted_col_width, 
                         line_height, datum, 
                         border=0, align=align_data, ln=3,
