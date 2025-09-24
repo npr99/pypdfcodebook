@@ -18,9 +18,6 @@ class codebook():
             datastructure: Dict[str, Dict[str, Any]],
             projectoverview: str,
             keyterms: str,
-            communities: Dict[str, Dict[str, Any]],
-            community: str,
-            year: Union[int, str],
             output_filename: str,
             outputfolders: Dict[str, str] = {},
             seed: int = 15151,
@@ -42,10 +39,6 @@ class codebook():
                 'AnalysisUnit', 'MeasureUnit' etc.
             projectoverview (str): Path to markdown file containing project description.
             keyterms (str): Path to markdown file containing key terms and definitions.
-            communities (Dict[str, Dict[str, Any]]): Nested dictionary defining
-                geographic areas and their properties including county information.
-            community (str): Key identifier for specific community in communities dict.
-            year (Union[int, str]): Year of data collection for documentation.
             output_filename (str): Base filename for generated PDF (without extension).
             outputfolders (Dict[str, str], optional): Directory paths for outputs.
                 Defaults to {}.
@@ -71,9 +64,6 @@ class codebook():
         self.datastructure = datastructure
         self.projectoverview = projectoverview
         self.keyterms = keyterms
-        self.communities = communities
-        self.community = community
-        self.year = year
         self.output_filename = output_filename
         self.outputfolders = outputfolders
         self.seed = seed
@@ -103,19 +93,6 @@ class codebook():
             fill = not fill
             pdf.ln()
 
-    @staticmethod
-    def county_list_for_tabletitle(communities,community):
-        """
-        Table titles should include the county names
-        """
-        counties_to_display = []
-        for county in communities[community]['counties'].keys():
-            state_county = communities[community]['counties'][county]['Name']
-            counties_to_display.append(state_county)
-
-        counties_to_display_joined = " & ".join(counties_to_display)
-
-        return counties_to_display_joined
 
     def add_keyterms(self,pdf):
         # Add Key Terms and Definitions

@@ -38,9 +38,6 @@ def test_codebook_with_sample_data(tmp_path):
         datastructure=datastructure,
         projectoverview=projectoverview_path,
         keyterms=keyterms_path,
-        communities=communities,
-        community=community,
-        year=2020,
         output_filename=output_filename,
         outputfolders=outputfolders,
         figures=None,      # or your test value
