@@ -22,10 +22,11 @@ def test_codebook_with_sample_data(tmp_path):
     spec.loader.exec_module(ds_module)
     datastructure = ds_module.DATA_STRUCTURE
 
-    # Set up output
-    output_filename_path = tmp_path / "test_codebook.pdf"
+    # Set up output in tests directory
+    tests_dir = os.path.dirname(__file__)
+    output_filename_path = os.path.join(tests_dir, "test_codebook.pdf")
     output_filename = "test_codebook"  # Just the name without extension
-    outputfolders = {'top': str(tmp_path)}
+    outputfolders = {'top': tests_dir}
 
     # Provide valid test values for communities and community
     communities = {'test_comm': {'community_name': 'Test Community'}}
@@ -48,4 +49,4 @@ def test_codebook_with_sample_data(tmp_path):
     pdfcodebook.create_codebook()
 
     # Assert output file was created
-    assert output_filename_path.exists()
+    assert os.path.exists(output_filename_path)

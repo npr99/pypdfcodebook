@@ -2,7 +2,8 @@ import pandas as pd
 import numpy as np
 import csv
 import random
-from fpdf import FPDF, TitleStyle 
+from fpdf import FPDF, TextStyle
+from typing import Dict, List, Union, Optional, Any
 
 from pypdfcodebook.pdfcb_03b_pdffunctions import PDF
 
@@ -12,19 +13,58 @@ class codebook():
     Functions to create a pdf codebook for data
     """ 
     def __init__(self,
-            input_df,
-            header_title,
-            datastructure,
-            projectoverview,
-            keyterms,
-            communities,
-            community,
-            year,
-            output_filename,
-            outputfolders = {},
-            seed = 15151,
-            figures = None,
-            image_path = ""):
+            input_df: pd.DataFrame,
+            header_title: str,
+            datastructure: Dict[str, Dict[str, Any]],
+            projectoverview: str,
+            keyterms: str,
+            communities: Dict[str, Dict[str, Any]],
+            community: str,
+            year: Union[int, str],
+            output_filename: str,
+            outputfolders: Dict[str, str] = {},
+            seed: int = 15151,
+            figures: Optional[Any] = None,
+            image_path: str = "") -> None:
+        """
+        Initialize a codebook generator for creating PDF documentation of datasets.
+        
+        This class creates comprehensive codebooks with data dictionaries, variable
+        summaries, and statistical analyses. It processes pandas DataFrames and 
+        generates professional PDF documentation with customizable formatting.
+        
+        Args:
+            input_df (pd.DataFrame): The dataset to create a codebook for.
+            header_title (str): Main title to appear in PDF headers.
+            datastructure (Dict[str, Dict[str, Any]]): Metadata dictionary defining
+                variable characteristics. Each key is a variable name, values are
+                dictionaries with 'DataType', 'length', 'categorical', 'label',
+                'AnalysisUnit', 'MeasureUnit' etc.
+            projectoverview (str): Path to markdown file containing project description.
+            keyterms (str): Path to markdown file containing key terms and definitions.
+            communities (Dict[str, Dict[str, Any]]): Nested dictionary defining
+                geographic areas and their properties including county information.
+            community (str): Key identifier for specific community in communities dict.
+            year (Union[int, str]): Year of data collection for documentation.
+            output_filename (str): Base filename for generated PDF (without extension).
+            outputfolders (Dict[str, str], optional): Directory paths for outputs.
+                Defaults to {}.
+            seed (int, optional): Random seed for reproducible example generation.
+                Defaults to 15151.
+            figures (Optional[Any], optional): Figure objects to include in codebook.
+                Defaults to None.
+            image_path (str, optional): Path to logo/image file for PDF footer.
+                Defaults to "".
+        
+        Returns:
+            None: This is a constructor method.
+            
+        Note:
+            - The datastructure dict should follow a consistent schema for best results
+            - File paths (projectoverview, keyterms, image_path) should be absolute paths
+            - Community key must exist in communities dictionary
+            - Random seed affects example generation in variable summaries
+        """
 
         self.input_df = input_df
         self.header_title = header_title
@@ -139,23 +179,15 @@ class codebook():
                                                 
         return table
 
-    @staticmethod
-    def load_tabledata_from_csv(csv_filepath):
-        table_data = []
-        with open(csv_filepath, encoding="utf8") as csv_file:
-            for row in csv.reader(csv_file, delimiter=","):
-                table_data.append(row)
-        return table_data
-
     def add_datadictionary(self, pdf):
         # Add Data Dictionary - Variable Summary
         table = self.create_data_dictionary_table()
         styled_table = table.copy()
         styled_table.reset_index(inplace = True)
         styled_table = styled_table.drop(columns = ['index'])
-        styled_table.to_csv('temp.csv', index = False)
-
-        table_data = self.load_tabledata_from_csv('temp.csv')
+        
+        # Convert DataFrame directly to list of lists for PDF table
+        table_data = [styled_table.columns.tolist()] + styled_table.values.tolist()
         pdf.start_section("Data Dictionary: Summary of Variables")
         pdf.ln()
         pdf.create_table(table_data = table_data,title='', 
@@ -473,9 +505,9 @@ class codebook():
             styled_table = table.copy()
             styled_table.reset_index(inplace = True)
             styled_table = styled_table.drop(columns = ['index'])
-            styled_table.to_csv('temp.csv', index = False)
-
-            table_data = self.load_tabledata_from_csv('temp.csv')
+            
+            # Convert DataFrame directly to list of lists for PDF table
+            table_data = [styled_table.columns.tolist()] + styled_table.values.tolist()
             title = variable+': '+self.datastructure[variable]['label'] 
             pdf.create_table(table_data = table_data, title=title, 
                 data_size= 10, title_size = 12,
@@ -498,9 +530,9 @@ class codebook():
                 styled_table = table.copy()
                 styled_table.reset_index(inplace = True)
                 styled_table = styled_table.drop(columns = ['index'])
-                styled_table.to_csv('temp.csv', index = False)
-
-                table_data = self.load_tabledata_from_csv('temp.csv')
+                
+                # Convert DataFrame directly to list of lists for PDF table
+                table_data = [styled_table.columns.tolist()] + styled_table.values.tolist()
                 title = variable+': '+self.datastructure[variable]['label'] + \
                     ' - Categorical codes, labels and frequencies'
                 #  Number of columns in Table Data
@@ -543,11 +575,9 @@ class codebook():
         Generate codebook for string variables as PDF File
         """
         
-        # Instantiation of inherited class
-        where = self.communities[self.community]['community_name']
-        when = str(self.year)
-        header_text = f"{self.header_title} Codebook for {where}, {when}"
-        print(header_text)
+        # Use header_title directly for generic codebook generation
+        header_text = self.header_title
+        print(f"Creating codebook: {header_text}")
         
         pdf = PDF(
             header_text = header_text,
@@ -559,7 +589,7 @@ class codebook():
         # Set styles for section headings
         pdf.set_section_title_styles(
             # Level 0 titles:
-            TitleStyle(
+            TextStyle(
                 font_family="helvetica",
                 font_style="B",
                 font_size_pt=14,
@@ -570,7 +600,7 @@ class codebook():
                 b_margin=0,
             ),
             # Level 1 subtitles:
-            TitleStyle(
+            TextStyle(
                 font_family="helvetica",
                 font_style="B",
                 font_size_pt=12,
@@ -608,11 +638,6 @@ class codebook():
             self.add_keyterms(pdf)
         
         # Save codebook
-        # Save results for community name
         codebook_filepath = self.outputfolders['top']+"/"+self.output_filename+'.pdf'
         print("Saving codebook to",codebook_filepath)
         pdf.output(codebook_filepath)
-
-        # Save second file to common directory
-        copy_codebook_filepath = self.outputfolders['top']+"/../"+self.output_filename+'.pdf'
-        pdf.output(copy_codebook_filepath)
