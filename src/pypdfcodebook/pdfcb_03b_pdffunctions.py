@@ -1,5 +1,6 @@
 import csv
 from fpdf import FPDF 
+from typing import List, Union, Any 
 
 """
 Help to make Codebook PDF
@@ -41,7 +42,17 @@ class PDF(FPDF):
         self.footer_text = footer_text
         self.image_path = image_path
         
-    def header(self):
+    def header(self) -> None:
+        """
+        Create the header for each PDF page.
+        
+        This method is automatically called by FPDF2 when a new page is added.
+        It sets up the header with custom text that was provided during PDF initialization.
+        The header uses Helvetica Bold 15pt font and is centered on the page.
+        
+        Returns:
+            None: This method modifies the PDF document in-place.
+        """
         # Setting font: helvetica bold 15
         self.set_font("helvetica", "B", 15)
         # Moving cursor to the right:
@@ -56,7 +67,21 @@ class PDF(FPDF):
         self.ln(15)
 
     # Footer is a FPDF2 function that is called with addpage
-    def footer(self):
+    def footer(self) -> None:
+        """
+        Create the footer for each PDF page.
+        
+        This method is automatically called by FPDF2 when a new page is added.
+        The footer includes:
+        - An optional image (if image_path was provided during initialization)
+        - Page numbering in format "Page X/{nb}" where {nb} is total pages
+        - Custom footer text (provided during initialization)
+        
+        The footer uses Helvetica Italic 8pt font and is centered on the page.
+        
+        Returns:
+            None: This method modifies the PDF document in-place.
+        """
         # Rendering logo:
         if self.image_path != "":
             self.image(name = self.image_path, w=self.epw, x = 15, y = self.eph+10)
@@ -76,9 +101,39 @@ class PDF(FPDF):
     ## TABLE FUNCTIONS
     # Code from: https://github.com/bvalgard/create-pdf-with-python-fpdf2/blob/main/table_function.py
 
-    def get_col_widths(self, cell_width, data, table_data):
+    def get_col_widths(self, 
+                      cell_width: Union[str, int, List[int]], 
+                      data: List[List[str]], 
+                      table_data: List[List[str]]) -> Any:
         """
-        function to Get Width of Columns for tables
+        Calculate column widths for table creation based on the specified method.
+        
+        This function supports different strategies for determining column widths:
+        - 'even': Distribute available width evenly across all columns
+        - 'uneven': Calculate widths based on content length (auto-fit)
+        - 'split-20-80': Create a two-column layout with 20%/80% width split
+        - int: Use a fixed width for all columns (passthrough)
+        - List[int]: Specify individual width for each column (passthrough)
+        
+        Args:
+            cell_width (Union[str, int, List[int]]): Width calculation method or specific values.
+                - str: 'even', 'uneven', or 'split-20-80'
+                - int: Fixed width for all columns
+                - List[int]: Individual width for each column
+            data (List[List[str]]): Table data excluding headers.
+            table_data (List[List[str]]): Complete table data including headers.
+        
+        Returns:
+            Union[float, int, List[int], List[float]]: Column width(s) based on input method.
+                - float: When cell_width is 'even'
+                - List[float]: When cell_width is 'uneven'
+                - List[int]: When cell_width is 'split-20-80' or List[int]
+                - int: When cell_width is int
+        
+        Note:
+            - For 'uneven' mode, adds 4mm padding to each calculated width
+            - Uses self.epw (effective page width) for percentage calculations
+            - Content length is measured using self.get_string_width()
         """
         col_width = cell_width
         if col_width == 'even':
@@ -107,42 +162,51 @@ class PDF(FPDF):
         return col_width
 
     def create_table(self,
-                    table_data, 
-                    title='', 
-                    data_size = 10, 
-                    title_size=12, 
-                    align_data='L', 
-                    align_header='L', 
-                    cell_width='uneven',
-                    line_space = 2.5):
+                    table_data: List[List[str]], 
+                    title: str = '', 
+                    data_size: int = 10, 
+                    title_size: int = 12, 
+                    align_data: str = 'L', 
+                    align_header: str = 'L', 
+                    cell_width: Union[str, int, List[int]] = 'uneven',
+                    line_space: float = 2.5) -> None:
         """
-        Code from: https://github.com/bvalgard/create-pdf-with-python-fpdf2/blob/main/table_function.py
-        table_data: 
-                    list of lists with first element being list of headers
-        title: 
-                    (Optional) title of table (optional)
-        data_size: 
-                    the font size of table data
-        title_size: 
-                    the font size fo the title of the table
-        align_data: 
-                    align table data
-                    L = left align
-                    C = center align
-                    R = right align
-        align_header: 
-                    align table data
-                    L = left align
-                    C = center align
-                    R = right align
-        cell_width: 
-                    even: evenly distribute cell/column width
-                    uneven: base cell size on length of cell/column items
-                    int: int value for width of each cell/column
-                    list of ints: list equal to number of columns with the width of each cell / column
-
-        line_space: 
-                    Spacing between rows in table
+        Create a formatted table in the PDF document.
+        
+        This method creates a professional-looking table with headers, data rows,
+        and optional title. It supports various alignment options, font sizes,
+        and column width strategies.
+        
+        Code adapted from: https://github.com/bvalgard/create-pdf-with-python-fpdf2/blob/main/table_function.py
+        
+        Args:
+            table_data (List[List[str]]): List of lists with first element being list of headers.
+            title (str, optional): Title of the table. Defaults to ''.
+            data_size (int, optional): Font size of table data. Defaults to 10.
+            title_size (int, optional): Font size of the table title. Defaults to 12.
+            align_data (str, optional): Alignment for table data. Defaults to 'L'.
+                - 'L': Left align
+                - 'C': Center align  
+                - 'R': Right align
+            align_header (str, optional): Alignment for table headers. Defaults to 'L'.
+                - 'L': Left align
+                - 'C': Center align
+                - 'R': Right align
+            cell_width (Union[str, int, List[int]], optional): Column width strategy. Defaults to 'uneven'.
+                - 'even': Evenly distribute cell/column width
+                - 'uneven': Base cell size on length of cell/column items
+                - 'split-20-80': Create 20%/80% two-column split
+                - int: Fixed width for all cells/columns
+                - List[int]: Individual width for each column
+            line_space (float, optional): Spacing between rows in table. Defaults to 2.5.
+        
+        Returns:
+            None: This method modifies the PDF document in-place.
+            
+        Note:
+            - Headers are automatically formatted with lines above and below
+            - Data rows alternate with light blue background fill
+            - Table automatically handles text wrapping within cells
         """
 
         self.set_font("helvetica", size=title_size)
