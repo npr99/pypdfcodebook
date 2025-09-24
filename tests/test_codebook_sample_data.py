@@ -24,6 +24,9 @@ def test_codebook_with_sample_data(tmp_path):
     output_filename = tmp_path / "test_codebook.pdf"
     outputfolders = [str(tmp_path)]
 
+    # Provide valid test values for communities and community
+    communities = {'test_comm': {'community_name': 'Test Community'}}
+    community = 'test_comm'
     # Create codebook
     pdfcodebook = codebook(
         input_df=input_df,
@@ -31,8 +34,8 @@ def test_codebook_with_sample_data(tmp_path):
         datastructure=datastructure,
         projectoverview=projectoverview_path,
         keyterms=keyterms_path,
-        communities=None,  # or your test value
-        community=None,    # or your test value
+        communities=communities,
+        community=community,
         year=2020,
         output_filename=str(output_filename),
         outputfolders=outputfolders,

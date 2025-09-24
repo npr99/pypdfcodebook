@@ -24,7 +24,14 @@ class PDF(FPDF):
             header_text: str = "Header Text",
             footer_text: str = "Footer Text",
             image_path:  str = ""):
-            
+        """
+        Initialize a PDF document with custom header and footer text.
+
+        Args:
+            header_text (str): Text to display in the header.
+            footer_text (str): Text to display in the footer.
+            image_path (str): Path to an image file to display in the footer.
+        """
         # Help with understating super().__init__()
         # https://rhettinger.wordpress.com/2011/05/26/super-considered-super/
         # Super is a function that calls the parent class
