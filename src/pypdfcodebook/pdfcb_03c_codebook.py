@@ -71,7 +71,40 @@ class codebook():
         self.figures = figures
         self.image_path = image_path
 
-    def render_toc(self, pdf, outline):
+    def render_toc(self, pdf: Any, outline: List[Any]) -> None:
+        """
+        Render a formatted table of contents in the PDF document.
+        
+        This method creates a professional table of contents with clickable links
+        to each section. It formats section names with indentation based on their
+        hierarchical level and displays page numbers aligned to the right.
+        
+        The table of contents features:
+        - Title "Table of contents:" in 16pt Helvetica Bold with underline
+        - Section entries in 12pt Helvetica with alternating row backgrounds
+        - Clickable links that navigate to the corresponding page
+        - Hierarchical indentation (2 spaces per level)
+        - Right-aligned page numbers
+        - Light blue background on alternating rows for improved readability
+        
+        Args:
+            pdf (Any): The PDF object to render the table of contents into.
+                Should be an instance of the PDF class with FPDF2 functionality.
+            outline (List[Any]): List of section objects containing the document structure.
+                Each section object should have the following attributes:
+                - level (int): Hierarchical level for indentation (0=top level)
+                - name (str): Display name of the section
+                - page_number (int): Page number where the section begins
+        
+        Returns:
+            None: This method modifies the PDF document in-place.
+            
+        Note:
+            - This method is typically called by FPDF2's insert_toc_placeholder()
+            - The alternating fill pattern starts with True (light blue background)
+            - Links are automatically created and associated with the correct pages
+            - Uses 80%/20% width split for section names vs page numbers
+        """
         pdf.ln()
         pdf.set_font("Helvetica", size=16)
         pdf.underline = True
@@ -80,28 +113,235 @@ class codebook():
         pdf.ln(pdf.font_size) # move cursor back to the left margin
         pdf.underline = False
         pdf.set_font("Helvetica", size=12)
-        pdf.set_fill_color(224, 235, 255)
-        fill = True
+        pdf.set_fill_color(224, 235, 255)  # Set fill color once - light blue
+        fill = False  # Start with no fill for first row
         for section in outline:
             link = pdf.add_link()
             pdf.set_link(link, page=section.page_number)
             text = f'{" " * section.level * 2} {section.name}'
+            
             pdf.multi_cell(w=int(pdf.epw * 0.8), h=pdf.font_size*2, txt=text, 
-                    ln=3, align="L", link=link,fill = fill)
+                    ln=3, align="L", link=link, fill=fill)
             text = f'{section.page_number}'
             pdf.multi_cell(w=int(pdf.epw * 0.2), h=pdf.font_size*2, txt=text, 
-                    ln=3, align="R", link=link, fill = fill)
-            fill = not fill
+                    ln=3, align="R", link=link, fill=fill)
+            fill = not fill  # Alternate for next row
             pdf.ln()
 
+    def add_projectoverview(self, pdf: Any) -> None:
+        """
+        Add a Project Overview section to the PDF document.
 
-    def add_keyterms(self,pdf):
+        A project overview is a summary that describes the purpose, scope, and key details
+        of a project or dataset. It provides essential context for anyone using the data,
+        helping them understand why the data was collected, what it represents, and how it
+        should be interpreted. Including a project overview is important because it orients
+        new users, supports transparency, and ensures that the data is used appropriately.
+
+        This method reads a markdown file containing the project overview/summary
+        and adds it as a formatted section to the codebook PDF. The content is rendered
+        with markdown support, allowing for rich text formatting.
+
+        The section includes:
+        - A section header "Project Overview: Summary of Project Details"
+        - Content from the projectoverview markdown file
+        - Proper font formatting (Times 12pt)
+        - Markdown rendering support
+        - Automatic page break after the section
+
+        Args:
+            pdf (Any): The PDF object to add the project overview section to.
+                Should be an instance of the PDF class with FPDF2 functionality
+                including start_section(), multi_cell(), and markdown support.
+
+        Returns:
+            None: This method modifies the PDF document in-place.
+
+        Raises:
+            FileNotFoundError: If the projectoverview file path doesn't exist.
+            UnicodeDecodeError: If the projectoverview file cannot be decoded as latin-1.
+
+        Note:
+            - The projectoverview file should be in markdown format for best results
+            - Content is decoded using 'latin-1' encoding for broad compatibility
+            - A new page is automatically added after the project overview section
+            - The projectoverview file path is specified in self.projectoverview during initialization
+        """
+        pdf.start_section("Project Overview: Summary of Project Details")
+        pdf.ln()
+
+        try:
+            with open(self.projectoverview, "rb") as fh:
+                txt = fh.read().decode("latin-1")
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Project overview file not found: {self.projectoverview}")
+        except UnicodeDecodeError as e:
+            raise UnicodeDecodeError(
+                e.encoding, e.object, e.start, e.end,
+                f"Cannot decode project overview file as latin-1: {self.projectoverview}"
+            )
+
+        pdf.set_font("Times", size=12)
+        line_height = pdf.font_size
+        pdf.multi_cell(w=pdf.epw, h=line_height,
+                       txt=txt, ln=2,
+                       max_line_height=line_height*2,
+                       align='L', markdown=True)
+
+        pdf.add_page()
+
+    def create_data_dictionary_table(self) -> pd.DataFrame:
+        """
+        Create a data dictionary table summarizing variables and their metadata.
+
+        A data dictionary is a table or document that describes the structure, meaning,
+        and attributes of each variable in a dataset. It explains what each variable
+        represents, its data type, possible values, and any special notes. This is important
+        because it helps anyone using the data understand what the variables mean, how to
+        interpret them, and how to use the data correctly—reducing confusion and errors,
+        especially for new users or collaborators.
+
+        This method constructs a pandas DataFrame that lists all variables in the input
+        dataset along with key metadata fields (Data Type, Length, Categorical, Label)
+        if available in the datastructure dictionary. The resulting table is suitable
+        for inclusion in a codebook or for further processing.
+
+        Returns:
+            pd.DataFrame: A table with columns for variable name and metadata fields.
+
+        Note:
+            - Only variables present in the input DataFrame are included.
+            - If a metadata field is missing for a variable, it is filled with a blank string.
+            - The output columns are: Variable Name, Data Type, Length, Categorical, Variable Label.
+        """
+        table_rows = []
+        # Set up initial table of variables in data file
+        for variable in self.input_df.columns:
+            table_rows.append([variable])
+        # Create base table
+        table = pd.DataFrame(data=table_rows, columns=["variable name"])
+
+        # Add variable details if in data structure
+        for variable in self.input_df.columns:
+            if variable in self.datastructure:
+                for characteristic in ['DataType', 'length', 'categorical', 'label']:
+                    if characteristic in self.datastructure[variable]:
+                        char = self.datastructure[variable][characteristic]
+                        table.loc[table["variable name"] == variable, characteristic] = char
+                    else:
+                        table.loc[table["variable name"] == variable, characteristic] = ' '
+
+        # Rename columns for output
+        table = table.rename(columns={
+            'variable name': 'Variable Name',
+            'DataType': 'Data Type',
+            'length': 'Length',
+            'categorical': 'Categorical',
+            'label': 'Variable Label'
+        })
+
+        return table
+
+    def add_datadictionary(self, pdf: Any) -> None:
+        """
+        Add a Data Dictionary section to the PDF document.
+
+        The data dictionary provides a summary table of all variables in the dataset,
+        including their names, data types, lengths, categorical status, and labels.
+        This section is essential for users to understand the structure and content
+        of the dataset, and is generated using the `create_data_dictionary_table` method.
+
+        The section includes:
+        - A section header "Data Dictionary: Summary of Variables"
+        - A formatted table with variable metadata
+        - Automatic page break after the section
+
+        Args:
+            pdf (Any): The PDF object to add the data dictionary section to.
+                Should be an instance of the PDF class with FPDF2 functionality
+                including start_section(), create_table(), and markdown support.
+
+        Returns:
+            None: This method modifies the PDF document in-place.
+
+        Note:
+            - The data dictionary table is generated from the current input DataFrame and datastructure.
+            - The table columns are: Variable Name, Data Type, Length, Categorical, Variable Label.
+            - A new page is automatically added after the data dictionary section.
+        """
+        table = self.create_data_dictionary_table()
+        styled_table = table.copy()
+        styled_table.reset_index(inplace=True)
+        styled_table = styled_table.drop(columns=['index'])
+
+        # Convert DataFrame directly to list of lists for PDF table
+        table_data = [styled_table.columns.tolist()] + styled_table.values.tolist()
+        pdf.start_section("Data Dictionary: Summary of Variables")
+        pdf.ln()
+        pdf.create_table(
+            table_data=table_data,
+            title='',
+            align_data='L',
+            align_header='C',
+            line_space=1.75,
+            cell_width=[30, 20, 14, 25, pdf.epw - (30 + 20 + 14 + 25)]
+        )
+        pdf.add_page()
+
+
+    def add_keyterms(self, pdf: Any) -> None:
+        """
+        Add a Key Terms and Definitions section to the PDF document.
+        
+        Key terms provide essential definitions that ensure future data users
+        do not have to assume what terms mean, promoting clear understanding
+        and consistent interpretation of the dataset and its documentation.
+        
+        This method reads a markdown file containing key terms and definitions
+        and adds it as a formatted section to the codebook. The content is 
+        rendered with markdown support, allowing for rich text formatting
+        including bold, italic, and other markdown features.
+        
+        The section includes:
+        - A section header "Key Terms and Definitions"
+        - Content from the keyterms markdown file
+        - Proper font formatting (Times 12pt)
+        - Markdown rendering support
+        - Automatic page break after the section
+        
+        Args:
+            pdf (Any): The PDF object to add the key terms section to.
+                Should be an instance of the PDF class with FPDF2 functionality
+                including start_section(), multi_cell(), and markdown support.
+        
+        Returns:
+            None: This method modifies the PDF document in-place.
+            
+        Raises:
+            FileNotFoundError: If the keyterms file path doesn't exist.
+            UnicodeDecodeError: If the keyterms file cannot be decoded as latin-1.
+            
+        Note:
+            - The keyterms file should be in markdown format for best results
+            - Content is decoded using 'latin-1' encoding for broad compatibility
+            - A new page is automatically added after the key terms section
+            - The keyterms file path is specified in self.keyterms during initialization
+        """
         # Add Key Terms and Definitions
         pdf.start_section("Key Terms and Definitions")
         pdf.ln()
 
-        with open(self.keyterms, "rb") as fh:
-            txt = fh.read().decode("latin-1")
+        try:
+            with open(self.keyterms, "rb") as fh:
+                txt = fh.read().decode("latin-1")
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Key terms file not found: {self.keyterms}")
+        except UnicodeDecodeError as e:
+            raise UnicodeDecodeError(
+                e.encoding, e.object, e.start, e.end,
+                f"Cannot decode key terms file as latin-1: {self.keyterms}"
+            )
+        
         pdf.set_font("Times", size=12)
         line_height = pdf.font_size
         pdf.multi_cell(w=pdf.epw, h = line_height,
@@ -111,74 +351,25 @@ class codebook():
 
         pdf.add_page()  
 
-    def add_projectoverview(self,pdf):
-        # Add Key Terms and Definitions
-        pdf.start_section("Project Overview: Summary of Project Details")
-        pdf.ln()
-
-        with open(self.projectoverview, "rb") as fh:
-            txt = fh.read().decode("latin-1")
-        pdf.set_font("Times", size=12)
-        line_height = pdf.font_size
-        pdf.multi_cell(w=pdf.epw, h = line_height,
-                    txt = txt, ln = 2, 
-                    max_line_height=line_height*2,
-                    align='L', markdown=True)
-
-        pdf.add_page() 
-
-
-    def create_data_dictionary_table(self):
-        table_rows = []
-        # Set up initial table of variables in data file
-        for variable in self.input_df.columns:
-            table_rows.append([variable])
-        # Create base table
-        table = pd.DataFrame(data = table_rows,columns=["variable name"])
-
-        # Add variable details if in data structure
-        for variable in self.input_df.columns:
-            if variable in self.datastructure:
-                for characteristic in ['DataType','length','categorical','label']:
-                    if characteristic in self.datastructure[variable]:
-                        char = self.datastructure[variable][characteristic]
-                        table.loc[table["variable name"] == variable, 
-                                        characteristic] = char
-                    elif characteristic not in self.datastructure[variable]:
-                        table.loc[table["variable name"] == variable, 
-                                        characteristic] = ' '
-                        
-        # rename columns
-        table = table.rename(columns = {'variable name':'Variable Name',
-                                        'DataType':'Data Type',
-                                        'length':'Length',  
-                                        'categorical':'Categorical',
-                                        'label':'Variable Label'})
-                                                
-        return table
-
-    def add_datadictionary(self, pdf):
-        # Add Data Dictionary - Variable Summary
-        table = self.create_data_dictionary_table()
-        styled_table = table.copy()
-        styled_table.reset_index(inplace = True)
-        styled_table = styled_table.drop(columns = ['index'])
-        
-        # Convert DataFrame directly to list of lists for PDF table
-        table_data = [styled_table.columns.tolist()] + styled_table.values.tolist()
-        pdf.start_section("Data Dictionary: Summary of Variables")
-        pdf.ln()
-        pdf.create_table(table_data = table_data,title='', 
-            align_data = 'L', align_header = 'C', 
-            line_space = 1.75, cell_width = [30,20,14,25,pdf.epw-(30+20+14+25)])
-        pdf.add_page()
-
-    def numeric_table(self,variable):
+    def numeric_table(self, variable: str) -> pd.DataFrame:
         """
-        Function produces a integer variable details a integer variable
+        Generate a summary table of descriptive statistics and metadata for a numeric variable.
 
-        """    
+        This function produces a table summarizing key characteristics of an integer or float variable,
+        including counts, missing values, range, mean, median, standard deviation, and percentiles.
+        It also includes relevant metadata from the datastructure, such as unit of measure and unit of analysis.
 
+        Args:
+            variable (str): The name of the numeric variable to summarize.
+
+        Returns:
+            pd.DataFrame: A table with two columns: 'Variable characteristic' and 'Variable details'.
+
+        Note:
+            - The variable must be present in both the input DataFrame and the datastructure.
+            - If a metadata field is missing, it is filled with a blank string.
+            - Percentiles reported: 10th, 25th, 50th, 75th, and 90th.
+        """
         # Collect key characteristics of variable
         total_cases = len(self.input_df[variable])
         total_cases_fmt = "{:,.0f}".format(total_cases)
@@ -188,115 +379,123 @@ class codebook():
         missing_count_fmt = "{:,.0f}".format(missing_count)
 
         descriptive_stats = {}
-        for descriptive_stat in ['min','max','mean','50%','std']:
+        for descriptive_stat in ['min', 'max', 'mean', '50%', 'std']:
             descriptive_stats[descriptive_stat] = "{:,.2f}".format(
                 self.input_df[variable].describe()[descriptive_stat])
 
         # Add percentiles
-        percentiles_values = self.input_df[variable].quantile([.1,.25,.5,.75,.9])
+        percentiles_values = self.input_df[variable].quantile([.1, .25, .5, .75, .9])
         descriptive_stats["10%"] = "{:,.2f}".format(percentiles_values[.1])
         descriptive_stats["25%"] = "{:,.2f}".format(percentiles_values[.25])
         descriptive_stats["50%"] = "{:,.2f}".format(percentiles_values[.5])
         descriptive_stats["75%"] = "{:,.2f}".format(percentiles_values[.75])
         descriptive_stats["90%"] = "{:,.2f}".format(percentiles_values[.9])
 
-
         # Add additional metadata to table
         characteristics = {}
-        for characteristic in ['DataType','AnalysisUnit','MeasureUnit']:
+        for characteristic in ['DataType', 'AnalysisUnit', 'MeasureUnit']:
             if characteristic in self.datastructure[variable]:
                 metadata = self.datastructure[variable][characteristic]
                 characteristics[characteristic] = metadata
-            elif characteristic not in self.datastructure[variable]:
+            else:
                 characteristics[characteristic] = ''
 
-
-        table_data = np.array([['variable type','numeric ('+\
-                        characteristics['DataType']+')'],
-                       ['total cases',total_cases_fmt],
-                       ['valid cases',valid_count_fmt],
-                       ['missing cases',missing_count_fmt],
-                       ['unit of measure',characteristics['MeasureUnit']],
-                       ['unit of analysis',characteristics['AnalysisUnit']],
-                       ['range','minimum value: '+descriptive_stats['min']+\
-                           ' to  maximum value: '+descriptive_stats['max']],
-                       ['mean',descriptive_stats['mean']], 
-                       ['median',descriptive_stats['50%']],
-                       ['standard deviation',descriptive_stats['std']],
-                       ['10th percentile',descriptive_stats['10%']],
-                       ['25th percentile',descriptive_stats['25%']],
-                       ['50th percentile',descriptive_stats['50%']],
-                       ['75th percentile',descriptive_stats['75%']],
-                       ['90th percentile',descriptive_stats['90%']]])
-        table = pd.DataFrame(data=table_data, 
-                        columns=["Variable characteristic", "Variable details"])
-
+        table_data = np.array([
+            ['variable type', 'numeric (' + characteristics['DataType'] + ')'],
+            ['total cases', total_cases_fmt],
+            ['valid cases', valid_count_fmt],
+            ['missing cases', missing_count_fmt],
+            ['unit of measure', characteristics['MeasureUnit']],
+            ['unit of analysis', characteristics['AnalysisUnit']],
+            ['range', 'minimum value: ' + descriptive_stats['min'] + ' to  maximum value: ' + descriptive_stats['max']],
+            ['mean', descriptive_stats['mean']],
+            ['median', descriptive_stats['50%']],
+            ['standard deviation', descriptive_stats['std']],
+            ['10th percentile', descriptive_stats['10%']],
+            ['25th percentile', descriptive_stats['25%']],
+            ['50th percentile', descriptive_stats['50%']],
+            ['75th percentile', descriptive_stats['75%']],
+            ['90th percentile', descriptive_stats['90%']]
+        ])
+        table = pd.DataFrame(data=table_data, columns=["Variable characteristic", "Variable details"])
         return table
 
-    def string_table(self,variable, PDF_only = True):
+    def string_table(self, variable: str, PDF_only: bool = True) -> pd.DataFrame:
         """
-        Function produces a string variable details a string/object variable
-        """    
+        Generate a summary table of descriptive statistics and metadata for a string (object) variable.
 
-        # Check if variable is a string - if not, convert to string for processing
-        if self.input_df[variable].dtype == 'object':
-            describe_var = self.input_df[variable].astype(str)
-        else:
-            # For non-string variables, convert to string for processing
-            describe_var = self.input_df[variable].astype(str)
+        This function produces a table summarizing key characteristics of a string or object variable,
+        including counts, missing values, unique values, minimum and maximum string lengths, and random examples.
+        It also includes relevant metadata from the datastructure, such as unit of measure and unit of analysis.
+
+        Args:
+            variable (str): The name of the string variable to summarize.
+            PDF_only (bool, optional): If True, output is formatted for PDF inclusion. (Currently unused.)
+
+        Returns:
+            pd.DataFrame: A table with two columns: 'Variable characteristic' and 'Variable details'.
+
+        Note:
+            - The variable must be present in both the input DataFrame and the datastructure.
+            - If a metadata field is missing, it is filled with a blank string.
+            - Random examples are selected to reduce disclosure of identifiable data.
+            - Minimum and maximum string lengths are based on the shortest and longest unique values.
+        """
+        # Ensure variable is treated as string for processing
+        describe_var = self.input_df[variable].astype(str)
+
         # Collect key characteristics of variable
         total_cases = len(describe_var)
-        total_cases_fmt = "{:,}".format(total_cases)
+        total_cases_fmt = f"{total_cases:,}"
         valid_count = describe_var.describe()['count']
-        valid_count_fmt = "{:,}".format(valid_count)
+        valid_count_fmt = f"{valid_count:,}"
         missing_count = describe_var.loc[describe_var.isna()].count()
-        missing_count_fmt = "{:,}".format(missing_count)
+        missing_count_fmt = f"{missing_count:,}"
         unique_count = describe_var.describe()['unique']
-        unique_count_fmt = "{:,}".format(unique_count)
+        unique_count_fmt = f"{unique_count:,}"
 
         string_list = describe_var.astype(str)
         varid_list = list(string_list.fillna(value="0"))
-        varid_min = min(varid_list)       
+        varid_min = min(varid_list)
         min_var_len = len(varid_min)
-        varid_max = max(varid_list)       
+        varid_max = max(varid_list)
         max_var_len = len(varid_max)
 
-        # Collect Random examples of variable
-        # Random examples help reduce disclosure of identifiable data
+        # Collect random examples of variable
         random.seed(self.seed)
         example_list = self.input_df[variable].unique().tolist()
-        example1 = example_list[random.randint(0, len(example_list)-1)]
-        example2 = example_list[random.randint(0, len(example_list)-1)]
-        example3 = example_list[random.randint(0, len(example_list)-1)]
-        example4 = example_list[random.randint(0, len(example_list)-1)]
+        if len(example_list) >= 4:
+            examples = random.sample(example_list, 4)
+        else:
+            # If fewer than 4 unique values, repeat as needed
+            examples = (example_list * 4)[:4]
+        example1, example2, example3, example4 = examples
 
         # Add additional metadata to table
         characteristics = {}
-        for characteristic in ['DataType','AnalysisUnit','MeasureUnit']:
+        for characteristic in ['DataType', 'AnalysisUnit', 'MeasureUnit']:
             if characteristic in self.datastructure[variable]:
                 metadata = self.datastructure[variable][characteristic]
                 characteristics[characteristic] = metadata
-            elif characteristic not in self.datastructure[variable]:
+            else:
                 characteristics[characteristic] = ''
 
-
-        table_data = np.array([['variable type','string'],
-                       ['total cases',total_cases_fmt],
-                       ['valid cases',valid_count_fmt],
-                       ['missing cases',missing_count_fmt],
-                       ['unit of measure',characteristics['MeasureUnit']],
-                       ['unit of analysis',characteristics['AnalysisUnit']],
-                       ['unique values',unique_count_fmt],
-                       ['minimum length', min_var_len], 
-                       ['maximum length', max_var_len],
-                       ['example 1',example1],
-                       ['example 2',example2],
-                       ['example 3',example3],
-                       ['example 4',example4]])
-        table = pd.DataFrame(data=table_data, 
-                        columns=["Variable characteristic", "Variable details"])
-
-
+        table_data = np.array([
+            ['variable type', 'string'],
+            ['total cases', total_cases_fmt],
+            ['valid cases', valid_count_fmt],
+            ['missing cases', missing_count_fmt],
+            ['unit of measure', characteristics['MeasureUnit']],
+            ['unit of analysis', characteristics['AnalysisUnit']],
+            ['unique values', unique_count_fmt],
+            ['minimum length', min_var_len],
+            ['maximum length', max_var_len],
+            ['example 1', example1],
+            ['example 2', example2],
+            ['example 3', example3],
+            ['example 4', example4]
+        ])
+        table = pd.DataFrame(data=table_data, columns=["Variable characteristic", "Variable details"])
         return table
 
     def categorical_toptable(self,variable):
