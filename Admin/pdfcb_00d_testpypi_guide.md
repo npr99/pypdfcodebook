@@ -156,8 +156,6 @@ and run:
 import pypdfcodebook
 print(pypdfcodebook.__version__)
 # Optionally, test a function:
-from pypdfcodebook.simple import add_one
-add_one(1)
 from pypdfcodebook.pdfcb_03c_codebook import codebook
 help(codebook.add_projectoverview)
 exit()

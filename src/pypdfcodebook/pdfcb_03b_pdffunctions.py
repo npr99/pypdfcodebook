@@ -1,3 +1,12 @@
+"""
+******************************************************************************
+* Project: pypdfcodebook                                                     *
+* License: BSD 3-Clause License                                              *
+* Author/Maintainer: Nathanael Rosenheim                                     *
+* Copyright (c) 2025 Nathanael Rosenheim                                     *
+******************************************************************************
+"""
+
 import csv
 from fpdf import FPDF 
 from typing import List, Union, Any 
@@ -99,7 +108,7 @@ class PDF(FPDF):
                     border = 0, ln = 0, align = "C")
 
     ## TABLE FUNCTIONS
-    # Code from: https://github.com/bvalgard/create-pdf-with-python-fpdf2/blob/main/table_function.py
+    # Code from: https://github.com/bvalgard/create-pdf-with-python-fpdf2/blob/master/table_function.py
 
     def get_col_widths(self, 
                       cell_width: Union[str, int, List[int]], 

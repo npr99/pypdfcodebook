@@ -1,3 +1,12 @@
+"""
+******************************************************************************
+* Project: pypdfcodebook                                                     *
+* License: BSD 3-Clause License                                              *
+* Author/Maintainer: Nathanael Rosenheim                                     *
+* Copyright (c) 2025 Nathanael Rosenheim                                     *
+******************************************************************************
+"""
+
 import pandas as pd
 import numpy as np
 import csv

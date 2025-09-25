@@ -1,3 +1,11 @@
+"""
+******************************************************************************
+* Project: pypdfcodebook                                                     *
+* License: BSD 3-Clause License                                              *
+* Author/Maintainer: Nathanael Rosenheim                                     *
+* Copyright (c) 2025 Nathanael Rosenheim                                     *
+******************************************************************************
+"""
 
 __version__ = "0.4.0"
 
