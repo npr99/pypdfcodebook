@@ -9,7 +9,7 @@ build-backend = "setuptools.build_meta"
 [project]
 
 name = "pypdfcodebook"
-version = "0.3.5"
+version = "0.4.0"
 
 description = "Package that generates a PDF codebook based on specified data structure and datafile."
 readme = "README.md"
