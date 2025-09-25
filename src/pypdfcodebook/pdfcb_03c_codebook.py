@@ -73,60 +73,40 @@ class codebook():
 
     def render_toc(self, pdf: Any, outline: List[Any]) -> None:
         """
-        Render a formatted table of contents in the PDF document.
-        
-        This method creates a professional table of contents with clickable links
-        to each section. It formats section names with indentation based on their
-        hierarchical level and displays page numbers aligned to the right.
-        
-        The table of contents features:
-        - Title "Table of contents:" in 16pt Helvetica Bold with underline
-        - Section entries in 12pt Helvetica with alternating row backgrounds
-        - Clickable links that navigate to the corresponding page
-        - Hierarchical indentation (2 spaces per level)
-        - Right-aligned page numbers
-        - Light blue background on alternating rows for improved readability
-        
-        Args:
-            pdf (Any): The PDF object to render the table of contents into.
-                Should be an instance of the PDF class with FPDF2 functionality.
-            outline (List[Any]): List of section objects containing the document structure.
-                Each section object should have the following attributes:
-                - level (int): Hierarchical level for indentation (0=top level)
-                - name (str): Display name of the section
-                - page_number (int): Page number where the section begins
-        
-        Returns:
-            None: This method modifies the PDF document in-place.
-            
-        Note:
-            - This method is typically called by FPDF2's insert_toc_placeholder()
-            - The alternating fill pattern starts with True (light blue background)
-            - Links are automatically created and associated with the correct pages
-            - Uses 80%/20% width split for section names vs page numbers
+        Render a formatted table of contents in the PDF document with alternating row colors 
+        and clickable links.
+
+        Render TOC is a required input for the FPDF2 function insert_toc_placeholder.
         """
         pdf.ln()
         pdf.set_font("Helvetica", size=16)
         pdf.underline = True
         text = "Table of contents:"
         pdf.multi_cell(w=pdf.epw, h=pdf.font_size, txt=text, ln=1)
-        pdf.ln(pdf.font_size) # move cursor back to the left margin
+        pdf.ln(pdf.font_size)
         pdf.underline = False
         pdf.set_font("Helvetica", size=12)
-        pdf.set_fill_color(224, 235, 255)  # Set fill color once - light blue
-        fill = False  # Start with no fill for first row
+        pdf.set_fill_color(224, 235, 255)  # Light blue
+        pdf.set_font("Helvetica", size=12)
+        fill = False
         for section in outline:
+            indent = " " * section.level * 2
             link = pdf.add_link()
             pdf.set_link(link, page=section.page_number)
-            text = f'{" " * section.level * 2} {section.name}'
-            
-            pdf.multi_cell(w=int(pdf.epw * 0.8), h=pdf.font_size*2, txt=text, 
-                    ln=3, align="L", link=link, fill=fill)
-            text = f'{section.page_number}'
-            pdf.multi_cell(w=int(pdf.epw * 0.2), h=pdf.font_size*2, txt=text, 
-                    ln=3, align="R", link=link, fill=fill)
-            fill = not fill  # Alternate for next row
-            pdf.ln()
+            section_title = f"{indent}{section.name}"
+            page_str = str(section.page_number)
+            # Calculate available width for dots
+            total_width = pdf.epw
+            title_width = pdf.get_string_width(section_title)
+            page_width = pdf.get_string_width(page_str)
+            dot_width = pdf.get_string_width('.')
+            # Padding between title and page number
+            padding = 2 * pdf.get_string_width(' ')
+            dots_width = total_width - title_width - page_width - padding
+            n_dots = max(2, int(dots_width // dot_width))
+            leader = '.' * n_dots
+            toc_line = f"{section_title} {leader} {page_str}"
+            pdf.cell(0, pdf.font_size * 2, txt=toc_line, border=0, ln=1, link=link)
 
     def add_projectoverview(self, pdf: Any) -> None:
         """
@@ -498,55 +478,62 @@ class codebook():
         table = pd.DataFrame(data=table_data, columns=["Variable characteristic", "Variable details"])
         return table
 
-    def categorical_toptable(self,variable):
+    def categorical_toptable(self, variable: str) -> pd.DataFrame:
         """
-        Function produces categorical variable characteristics
-        for the characteristics
-        """    
+        Generate a summary table of descriptive statistics and metadata for a categorical variable.
 
+        This function produces a table summarizing key characteristics of a categorical variable,
+        including counts, missing values, and the range of values (min/max if numeric-like).
+        It also includes relevant metadata from the datastructure, such as unit of measure and unit of analysis.
+
+        Args:
+            variable (str): The name of the categorical variable to summarize.
+
+        Returns:
+            pd.DataFrame: A table with two columns: 'Variable characteristic' and 'Variable details'.
+
+        Note:
+            - The variable must be present in both the input DataFrame and the datastructure.
+            - If a metadata field is missing, it is filled with a blank string.
+            - If the variable cannot be converted to float, min/max are reported as 'NA'.
+        """
         # Collect key characteristics of variable
         total_cases = len(self.input_df[variable])
-        total_cases_fmt = "{:,.0f}".format(total_cases)
+        total_cases_fmt = f"{total_cases:,}"
         valid_count = self.input_df[variable].describe()['count']
-        valid_count_fmt = "{:,.0f}".format(valid_count)
+        valid_count_fmt = f"{valid_count:,}"
         missing_count = self.input_df[variable].isna().sum()
-        missing_count_fmt = "{:,.0f}".format(missing_count)
+        missing_count_fmt = f"{missing_count:,}"
 
         descriptive_stats = {}
-        for descriptive_stat in ['min','max']:
+        for descriptive_stat in ['min', 'max']:
             try:
                 # convert to float to avoid error
                 float_var = self.input_df[variable].astype(float)
-                descriptive_stats[descriptive_stat] = "{:,.0f}".format(
-                    float_var.describe()[descriptive_stat])
-            except:
+                descriptive_stats[descriptive_stat] = f"{float_var.describe()[descriptive_stat]:,.0f}"
+            except Exception:
                 descriptive_stats[descriptive_stat] = 'NA'
 
         # Add additional metadata to table
         characteristics = {}
-        for characteristic in ['DataType','AnalysisUnit','MeasureUnit']:
+        for characteristic in ['DataType', 'AnalysisUnit', 'MeasureUnit']:
             if characteristic in self.datastructure[variable]:
                 metadata = self.datastructure[variable][characteristic]
                 characteristics[characteristic] = metadata
-            elif characteristic not in self.datastructure[variable]:
+            else:
                 characteristics[characteristic] = ''
 
-
-        table_data = np.array([['variable type','categorical ('+\
-                        characteristics['DataType']+')'],
-                       ['total cases',total_cases_fmt],
-                       ['valid cases',valid_count_fmt],
-                       ['missing cases',missing_count_fmt],
-                       ['unit of measure',characteristics['MeasureUnit']],
-                       ['unit of analysis',characteristics['AnalysisUnit']],
-                       ['range','minimum value: '+descriptive_stats['min']+\
-                           ' to  maximum value: '+descriptive_stats['max']]])        
-        
-        table = pd.DataFrame(data=table_data, 
-            columns=["Variable characteristic", "Variable details"])
-
-
-        return table               
+        table_data = np.array([
+            ['variable type', f"categorical ({characteristics['DataType']})"],
+            ['total cases', total_cases_fmt],
+            ['valid cases', valid_count_fmt],
+            ['missing cases', missing_count_fmt],
+            ['unit of measure', characteristics['MeasureUnit']],
+            ['unit of analysis', characteristics['AnalysisUnit']],
+            ['range', f"minimum value: {descriptive_stats['min']} to  maximum value: {descriptive_stats['max']}"]
+        ])
+        table = pd.DataFrame(data=table_data, columns=["Variable characteristic", "Variable details"])
+        return table
 
     def categorical_countfreq_table(self,
                                     variable,
@@ -652,119 +639,166 @@ class codebook():
 
         return categorical_table
 
-    def add_var_summary(self,pdf):
-        # Summary of Variables
+    def add_var_summary(self, pdf: Any) -> None:
+        """
+        Add a Variable Details and Notes section to the PDF document.
+
+        This method iterates through all variables in the datastructure and generates a detailed summary
+        for each, including descriptive statistics, metadata, and notes. It automatically determines the
+        appropriate summary table (numeric, string, or categorical) based on the variable's data type and
+        pyType. For categorical variables, it also includes a table of category codes, labels, and frequencies.
+        Any notes associated with a variable are appended after its summary table.
+
+        The section includes:
+        - A section header "Variable Details and Notes"
+        - A summary table for each variable
+        - Categorical code/frequency tables where applicable
+        - Notes for each variable if present
+        - Automatic page break after each variable
+
+        Args:
+            pdf (Any): The PDF object to add the variable summaries to.
+                Should be an instance of the PDF class with FPDF2 functionality
+                including start_section(), create_table(), multi_cell(), etc.
+
+        Returns:
+            None: This method modifies the PDF document in-place.
+
+        Note:
+            - Variable type and summary logic is determined by 'DataType' and 'pyType' in the datastructure.
+            - Categorical variables include a frequency table of codes and labels.
+            - Notes are included if present in the datastructure for a variable.
+            - Each variable's details start on a new page for clarity.
+        """
         pdf.start_section("Variable Details and Notes")
         pdf.ln()
         pdf.set_font("helvetica", size=12)
-        text = "The following pages provide details on each variable. "
-        text += "Where applicable notes provide links to verify data. "
-        text += "Categorical variables include datails on category codes."
-        pdf.multi_cell(w = pdf.epw, h= pdf.font_size*2, txt=text, ln = 2)
+        text = (
+            "The following pages provide details on each variable. "
+            "Where applicable, notes provide links to verify data. "
+            "Categorical variables include details on category codes."
+        )
+        pdf.multi_cell(w=pdf.epw, h=pdf.font_size*2, txt=text, ln=2)
         pdf.ln()
-        pdf.add_page()        
+        pdf.add_page()
         for variable in self.datastructure.keys():
             print(variable)
-            if self.datastructure[variable]['DataType'] == 'String' and \
-                self.datastructure[variable]['pyType'] != 'category':
+            dtype = self.datastructure[variable].get('DataType', '')
+            pytype = self.datastructure[variable].get('pyType', '')
+            if dtype == 'String' and pytype != 'category':
                 table = self.string_table(variable)
-            elif self.datastructure[variable]['DataType'] == 'String' and \
-                self.datastructure[variable]['pyType'] == 'category':
+            elif dtype == 'String' and pytype == 'category':
                 table = self.categorical_toptable(variable)
-            elif self.datastructure[variable]['DataType'] in ['Float','Int'] and \
-                self.datastructure[variable]['pyType'] != 'category':
+            elif dtype in ['Float', 'Int'] and pytype != 'category':
                 table = self.numeric_table(variable)
-            elif self.datastructure[variable]['DataType'] in ['Float','Int'] and \
-                self.datastructure[variable]['pyType'] == 'category':
+            elif dtype in ['Float', 'Int'] and pytype == 'category':
                 table = self.categorical_toptable(variable)
             else:
                 continue
             styled_table = table.copy()
-            styled_table.reset_index(inplace = True)
-            styled_table = styled_table.drop(columns = ['index'])
-            
+            styled_table.reset_index(inplace=True)
+            styled_table = styled_table.drop(columns=['index'])
+
             # Convert DataFrame directly to list of lists for PDF table
             table_data = [styled_table.columns.tolist()] + styled_table.values.tolist()
-            title = variable+': '+self.datastructure[variable]['label'] 
-            pdf.create_table(table_data = table_data, title=title, 
-                data_size= 10, title_size = 12,
-                align_data = 'R', align_header = 'C', 
+            title = f"{variable}: {self.datastructure[variable].get('label', '')}"
+            pdf.create_table(
+                table_data=table_data,
+                title=title,
+                data_size=10,
+                title_size=12,
+                align_data='R',
+                align_header='C',
                 cell_width='split-20-80',
-                line_space = 1.75)
+                line_space=1.75
+            )
 
-            # Add table of categories
-            if self.datastructure[variable]['pyType'] == 'category':
+            # Add table of categories for categorical variables
+            if pytype == 'category':
                 pdf.ln()
-                # Check if population variable is present
-                if 'pop_var' in self.datastructure[variable].keys():
-                    pop_var = self.datastructure[variable]['pop_var']
-                else:
-                    pop_var = ''
+                pop_var = self.datastructure[variable].get('pop_var', '')
                 table = self.categorical_countfreq_table(
-                    variable = variable,
-                    primary_key = self.datastructure[variable]['primary_key'],
-                    pop_var = pop_var)
+                    variable=variable,
+                    primary_key=self.datastructure[variable]['primary_key'],
+                    pop_var=pop_var
+                )
                 styled_table = table.copy()
-                styled_table.reset_index(inplace = True)
-                styled_table = styled_table.drop(columns = ['index'])
-                
+                styled_table.reset_index(inplace=True)
+                styled_table = styled_table.drop(columns=['index'])
+
                 # Convert DataFrame directly to list of lists for PDF table
                 table_data = [styled_table.columns.tolist()] + styled_table.values.tolist()
-                title = variable+': '+self.datastructure[variable]['label'] + \
-                    ' - Categorical codes, labels and frequencies'
-                #  Number of columns in Table Data
+                title = (
+                    f"{variable}: {self.datastructure[variable].get('label', '')} - "
+                    "Categorical codes, labels and frequencies"
+                )
                 ncols = len(table_data[0])
-                # If 6 columns then cell widths needs 6 widths
                 print(ncols)
                 if ncols == 6:
-                    cell_widths = [12,pdf.epw-(12+24+24+18+18),
-                                   24,24,18,18]
+                    cell_widths = [12, pdf.epw - (12 + 24 + 24 + 18 + 18), 24, 24, 18, 18]
                 elif ncols == 5:
-                    cell_widths = [12,pdf.epw-(12+24+24+30),30,
-                                   24,24]   
+                    cell_widths = [12, pdf.epw - (12 + 24 + 24 + 30), 30, 24, 24]
                 elif ncols == 4:
-                    cell_widths = [12,pdf.epw-(12+24+24),
-                                   24,24]
+                    cell_widths = [12, pdf.epw - (12 + 24 + 24), 24, 24]
                 else:
-                    # Default case: distribute columns evenly
-                    cell_widths = 'even'                
-                pdf.create_table(table_data = table_data, title=title, 
-                    data_size= 10, title_size = 12,
-                    align_data = 'R', align_header = 'C', 
+                    cell_widths = 'even'
+                pdf.create_table(
+                    table_data=table_data,
+                    title=title,
+                    data_size=10,
+                    title_size=12,
+                    align_data='R',
+                    align_header='C',
                     cell_width=cell_widths,
-                    line_space = 1.75)
-            # Add notes
+                    line_space=1.75
+                )
+            # Add notes if present
             if 'notes' in self.datastructure[variable]:
-                notes = self.datastructure[variable]['notes'] 
-                # If notes contain placeholders, user must provide formatted notes.
-                # No automatic county FIPS insertion.
-                pdf.cell(w = 0, h = 10, text = f"Variable Notes: {variable}", border = 0, ln = 1)
-                pdf.multi_cell(0, 3, notes, ln = 3, align = 'L',
-                                max_line_height=pdf.font_size*2)
+                notes = self.datastructure[variable]['notes']
+                pdf.cell(w=0, h=10, text=f"Variable Notes: {variable}", border=0, ln=1)
+                pdf.multi_cell(0, 3, notes, ln=3, align='L', max_line_height=pdf.font_size*2)
                 pdf.ln()
 
             pdf.add_page()
 
 
 
-    def create_codebook(self):
+    def create_codebook(self) -> None:
         """
-        Generate codebook for string variables as PDF File
+        Generate a complete PDF codebook for the dataset, including all metadata sections.
+
+        This method orchestrates the creation of a comprehensive codebook PDF, including:
+        - Table of contents
+        - Project overview
+        - Data dictionary
+        - Variable details and notes (with summary tables)
+        - Key terms and definitions
+        - Custom footer with filename and generation timestamp
+
+        The PDF is formatted with section headings, page breaks, and optional logo/image in the footer.
+        All content is generated from the input DataFrame and datastructure provided at initialization.
+
+        Returns:
+            None: The generated PDF is saved to the output folder specified in initialization.
+
+        Note:
+            - The output file is saved as <outputfolders['top']>/<output_filename>.pdf
+            - If figures are provided, they must be added by the user after PDF creation.
+            - All section content is generated in sequence for clarity and reproducibility.
         """
-        
-        # Use header_title directly for generic codebook generation
         header_text = self.header_title
         print(f"Creating codebook: {header_text}")
-        
+
         # Generate timestamp for footer reproducibility
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        
+
         pdf = PDF(
-            header_text = header_text,
-            footer_text = f"{self.output_filename} | Generated: {timestamp}",
-            image_path = self.image_path)
-        
-        pdf.set_margins(left = 15, top = 10)
+            header_text=header_text,
+            footer_text=f"{self.output_filename} | Generated: {timestamp}",
+            image_path=self.image_path
+        )
+
+        pdf.set_margins(left=15, top=10)
         pdf.alias_nb_pages()
         # Set styles for section headings
         pdf.set_section_title_styles(
@@ -793,9 +827,8 @@ class codebook():
         )
         pdf.add_page()
 
-            
         # Add Table of Contents
-        pdf.insert_toc_placeholder(self.render_toc,pages=1)
+        pdf.insert_toc_placeholder(self.render_toc, pages=1)
         pdf.add_page()
 
         # Add Project Overview
@@ -808,7 +841,6 @@ class codebook():
         # Add Variable Details and Notes
         self.add_var_summary(pdf)
 
-
         # If user provides figures, they must handle figure addition themselves.
         # This codebook does not generate or add figures automatically.
 
@@ -816,8 +848,8 @@ class codebook():
         if self.keyterms != '':
             pdf.add_page()
             self.add_keyterms(pdf)
-        
+
         # Save codebook
-        codebook_filepath = self.outputfolders['top']+"/"+self.output_filename+'.pdf'
-        print("Saving codebook to",codebook_filepath)
+        codebook_filepath = self.outputfolders['top'] + "/" + self.output_filename + '.pdf'
+        print("Saving codebook to", codebook_filepath)
         pdf.output(codebook_filepath)
