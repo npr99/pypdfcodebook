@@ -73,60 +73,40 @@ class codebook():
 
     def render_toc(self, pdf: Any, outline: List[Any]) -> None:
         """
-        Render a formatted table of contents in the PDF document.
-        
-        This method creates a professional table of contents with clickable links
-        to each section. It formats section names with indentation based on their
-        hierarchical level and displays page numbers aligned to the right.
-        
-        The table of contents features:
-        - Title "Table of contents:" in 16pt Helvetica Bold with underline
-        - Section entries in 12pt Helvetica with alternating row backgrounds
-        - Clickable links that navigate to the corresponding page
-        - Hierarchical indentation (2 spaces per level)
-        - Right-aligned page numbers
-        - Light blue background on alternating rows for improved readability
-        
-        Args:
-            pdf (Any): The PDF object to render the table of contents into.
-                Should be an instance of the PDF class with FPDF2 functionality.
-            outline (List[Any]): List of section objects containing the document structure.
-                Each section object should have the following attributes:
-                - level (int): Hierarchical level for indentation (0=top level)
-                - name (str): Display name of the section
-                - page_number (int): Page number where the section begins
-        
-        Returns:
-            None: This method modifies the PDF document in-place.
-            
-        Note:
-            - This method is typically called by FPDF2's insert_toc_placeholder()
-            - The alternating fill pattern starts with True (light blue background)
-            - Links are automatically created and associated with the correct pages
-            - Uses 80%/20% width split for section names vs page numbers
+        Render a formatted table of contents in the PDF document with alternating row colors 
+        and clickable links.
+
+        Render TOC is a required input for the FPDF2 function insert_toc_placeholder.
         """
         pdf.ln()
         pdf.set_font("Helvetica", size=16)
         pdf.underline = True
         text = "Table of contents:"
         pdf.multi_cell(w=pdf.epw, h=pdf.font_size, txt=text, ln=1)
-        pdf.ln(pdf.font_size) # move cursor back to the left margin
+        pdf.ln(pdf.font_size)
         pdf.underline = False
         pdf.set_font("Helvetica", size=12)
-        pdf.set_fill_color(224, 235, 255)  # Set fill color once - light blue
-        fill = False  # Start with no fill for first row
+        pdf.set_fill_color(224, 235, 255)  # Light blue
+        pdf.set_font("Helvetica", size=12)
+        fill = False
         for section in outline:
+            indent = " " * section.level * 2
             link = pdf.add_link()
             pdf.set_link(link, page=section.page_number)
-            text = f'{" " * section.level * 2} {section.name}'
-            
-            pdf.multi_cell(w=int(pdf.epw * 0.8), h=pdf.font_size*2, txt=text, 
-                    ln=3, align="L", link=link, fill=fill)
-            text = f'{section.page_number}'
-            pdf.multi_cell(w=int(pdf.epw * 0.2), h=pdf.font_size*2, txt=text, 
-                    ln=3, align="R", link=link, fill=fill)
-            fill = not fill  # Alternate for next row
-            pdf.ln()
+            section_title = f"{indent}{section.name}"
+            page_str = str(section.page_number)
+            # Calculate available width for dots
+            total_width = pdf.epw
+            title_width = pdf.get_string_width(section_title)
+            page_width = pdf.get_string_width(page_str)
+            dot_width = pdf.get_string_width('.')
+            # Padding between title and page number
+            padding = 2 * pdf.get_string_width(' ')
+            dots_width = total_width - title_width - page_width - padding
+            n_dots = max(2, int(dots_width // dot_width))
+            leader = '.' * n_dots
+            toc_line = f"{section_title} {leader} {page_str}"
+            pdf.cell(0, pdf.font_size * 2, txt=toc_line, border=0, ln=1, link=link)
 
     def add_projectoverview(self, pdf: Any) -> None:
         """

@@ -28,9 +28,7 @@ def test_codebook_with_sample_data(tmp_path):
     output_filename = "test_codebook"  # Just the name without extension
     outputfolders = {'top': tests_dir}
 
-    # Provide valid test values for communities and community
-    communities = {'test_comm': {'community_name': 'Test Community'}}
-    community = 'test_comm'
+
     # Create codebook
     pdfcodebook = codebook(
         input_df=input_df,

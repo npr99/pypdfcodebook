@@ -2,6 +2,10 @@ import pandas as pd
 from pypdfcodebook.pdfcb_03c_codebook import codebook
 import os
 
+'''
+Test making a codebook without keyterms or projectoverview files.
+'''
+
 def test_codebook_no_keyterms_projectoverview():
     # Sample data
     data = {
