@@ -9,7 +9,7 @@
 
 import csv
 from fpdf import FPDF 
-from typing import List, Union, Any 
+from typing import List, Union, Any, Optional
 
 """
 Help to make Codebook PDF
@@ -31,9 +31,9 @@ https://github.com/jorisschellekens/borb
 # Header is a FPDF2 function that is called with addpage
 class PDF(FPDF):
     def __init__(self,
-            header_text: str = "Header Text",
-            footer_text: str = "Footer Text",
-            image_path:  str = ""):
+        header_text: str = "Header Text",
+        footer_text: str = "Footer Text",
+        image_path: Optional[str] = None):
         """
         Initialize a PDF document with custom header and footer text.
 
@@ -92,7 +92,7 @@ class PDF(FPDF):
             None: This method modifies the PDF document in-place.
         """
         # Rendering logo:
-        if self.image_path != "":
+        if self.image_path:
             self.image(name = self.image_path, w=self.epw, x = 15, y = self.eph+10)
         # Position cursor at 1.4 inches from bottom:
         self.set_y(self.eph-10)
@@ -254,10 +254,10 @@ class PDF(FPDF):
             else:
                 width = col_width
             self.multi_cell(width, line_height, 
-                    datum, border=0, 
-                    align=align_header, ln=3, 
-                    max_line_height=self.font_size)
-            x_right = self.get_x()
+                text=datum, border=0, 
+                align=align_header, new_x="RIGHT", new_y="TOP", 
+                max_line_height=self.font_size)
+        x_right = self.get_x()
         self.ln(line_height) # move cursor back to the left margin
         y2 = self.get_y()
         # Add lines around headers
@@ -268,23 +268,21 @@ class PDF(FPDF):
         self.set_fill_color(224, 235, 255)
         fill = False
         # loop over rows
-        for i in range(len(data)):
-            row = data[i]
-            # Loop over columns
-            for i in range(len(row)):
-                datum = row[i]
+        for row in data:
+            for j in range(len(row)):
+                datum = row[j]
                 if not isinstance(datum, str):
                     datum = str(datum)
                 # Handle both single width and list of widths
                 if isinstance(col_width, list):
-                    adjusted_col_width = col_width[i]
+                    adjusted_col_width = col_width[j]
                 else:
                     adjusted_col_width = col_width
                 self.multi_cell(adjusted_col_width, 
-                        line_height, datum, 
-                        border=0, align=align_data, ln=3,
-                        max_line_height=self.font_size* line_space,
-                        fill = fill) 
+                    line_height, text=datum, 
+                    border=0, align=align_data, new_x="RIGHT", new_y="TOP",
+                    max_line_height=self.font_size* line_space,
+                    fill = fill)
             fill = not fill
             self.ln(self.font_size * line_space) # move cursor back to the left margin
         # Add line to bottom of table

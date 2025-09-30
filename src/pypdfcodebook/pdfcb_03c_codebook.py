@@ -32,7 +32,7 @@ class codebook():
             outputfolders: Dict[str, str] = {},
             seed: int = 15151,
             figures: Optional[Any] = None,
-            image_path: str = "") -> None:
+            image_path: Optional[str] = None) -> None:
         """
         Initialize a codebook generator for creating PDF documentation of datasets.
         
@@ -91,7 +91,7 @@ class codebook():
         pdf.set_font("Helvetica", size=16)
         pdf.underline = True
         text = "Table of contents:"
-        pdf.multi_cell(w=pdf.epw, h=pdf.font_size, txt=text, ln=1)
+        pdf.multi_cell(w=pdf.epw, h=pdf.font_size, text=text, new_x="LMARGIN", new_y="NEXT")
         pdf.ln(pdf.font_size)
         pdf.underline = False
         pdf.set_font("Helvetica", size=12)
@@ -115,7 +115,7 @@ class codebook():
             n_dots = max(2, int(dots_width // dot_width))
             leader = '.' * n_dots
             toc_line = f"{section_title} {leader} {page_str}"
-            pdf.cell(0, pdf.font_size * 2, txt=toc_line, border=0, ln=1, link=link)
+            pdf.cell(0, pdf.font_size * 2, text=toc_line, border=0, new_x="LMARGIN", new_y="NEXT", link=link)
 
     def add_projectoverview(self, pdf: Any) -> None:
         """
@@ -173,7 +173,7 @@ class codebook():
         pdf.set_font("Times", size=12)
         line_height = pdf.font_size
         pdf.multi_cell(w=pdf.epw, h=line_height,
-                       txt=txt, ln=2,
+                       text=txt, new_x="LEFT", new_y="NEXT",
                        max_line_height=line_height*2,
                        align='L', markdown=True)
 
@@ -687,7 +687,7 @@ class codebook():
             "Where applicable, notes provide links to verify data. "
             "Categorical variables include details on category codes."
         )
-        pdf.multi_cell(w=pdf.epw, h=pdf.font_size*2, txt=text, ln=2)
+        pdf.multi_cell(w=pdf.epw, h=pdf.font_size*2, text=text, new_x="LEFT", new_y="NEXT")
         pdf.ln()
         pdf.add_page()
         for variable in self.datastructure.keys():
@@ -764,8 +764,8 @@ class codebook():
             # Add notes if present
             if 'notes' in self.datastructure[variable]:
                 notes = self.datastructure[variable]['notes']
-                pdf.cell(w=0, h=10, text=f"Variable Notes: {variable}", border=0, ln=1)
-                pdf.multi_cell(0, 3, notes, ln=3, align='L', max_line_height=pdf.font_size*2)
+                pdf.cell(w=0, h=10, text=f"Variable Notes: {variable}", border=0, new_x="LMARGIN", new_y="NEXT")
+                pdf.multi_cell(0, 3, text=notes, new_x="RIGHT", new_y="TOP", align='L', max_line_height=pdf.font_size*2)
                 pdf.ln()
 
             pdf.add_page()
