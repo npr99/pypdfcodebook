@@ -56,15 +56,17 @@ class codebook():
                 Defaults to 15151.
             figures (Optional[Any], optional): Figure objects to include in codebook.
                 Defaults to None.
-            image_path (str, optional): Path to logo/image file for PDF footer.
-                Defaults to "".
+            image_path (Optional[str], optional): Path to logo/image file for PDF footer.
+                Can be None if no image is desired. Supported formats: PNG, JPG, JPEG, BMP, GIF, TIF, TIFF.
+                The file must exist and be in a supported format, otherwise it will be ignored.
         
         Returns:
             None: This is a constructor method.
             
         Note:
             - The datastructure dict should follow a consistent schema for best results
-            - File paths (projectoverview, keyterms, image_path) should be absolute paths
+            - File paths (projectoverview, keyterms, image_path) should be absolute paths and exist
+            - Image files must be in supported formats (PNG, JPG, JPEG, BMP, GIF, TIF, TIFF)
             - Community key must exist in communities dictionary
             - Random seed affects example generation in variable summaries
         """

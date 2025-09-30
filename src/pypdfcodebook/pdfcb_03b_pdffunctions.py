@@ -8,6 +8,7 @@
 """
 
 import csv
+import os
 from fpdf import FPDF 
 from typing import List, Union, Any, Optional
 
@@ -40,7 +41,10 @@ class PDF(FPDF):
         Args:
             header_text (str): Text to display in the header.
             footer_text (str): Text to display in the footer.
-            image_path (str): Path to an image file to display in the footer.
+            image_path (Optional[str]): Path to an image file to display in the footer.
+                Can be None if no image is desired. The file must exist and be in a 
+                supported format (PNG, JPG, JPEG, BMP, GIF, TIF, TIFF).
+                If None or file is missing/unsupported, no image will be displayed.
         """
         # Help with understating super().__init__()
         # https://rhettinger.wordpress.com/2011/05/26/super-considered-super/
@@ -91,11 +95,16 @@ class PDF(FPDF):
         Returns:
             None: This method modifies the PDF document in-place.
         """
-        # Rendering logo:
-        if self.image_path:
-            self.image(name = self.image_path, w=self.epw, x = 15, y = self.eph+10)
-        # Position cursor at 1.4 inches from bottom:
+        # Position cursor for footer content
         self.set_y(self.eph-10)
+        
+        # Add image if available and valid
+        if self.image_path and os.path.exists(str(self.image_path)):
+            try:
+                self.image(name=str(self.image_path), w=self.epw, x=15, y=self.eph+10)
+            except Exception as e:
+                print(f"Warning: Could not render image {self.image_path}: {str(e)}")
+        
         # Setting font: helvetica italic 8
         self.set_font("helvetica", "I", 8)
         # Printing page number:
