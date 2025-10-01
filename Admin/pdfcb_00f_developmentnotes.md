@@ -13,3 +13,20 @@ When you run `pip install -e .`, instead of copying your package files to the Py
 I was having consistent errors and could not figure out why they would not go away despite changing the code.
 
 This issue is not clear to me - but I am going to try the `pip install -e .`
+
+## Pytest Output Capturing
+
+When running tests with pytest, print statements in your test code are captured by default and only shown if the test fails. This can make debugging difficult because you can't see the output of your print statements during development.
+
+To see all print statements while running tests, use the `-s` flag (or `--capture=no`):
+
+```bash
+python -m pytest tests/test_codebook_with_images.py -v -s
+```
+
+Useful pytest flags:
+- `-s`: Shows all print statements (disables output capturing)
+- `-v`: Verbose mode, shows more details about which tests are running
+- You can combine flags: `-v -s` for both verbose output and print statements
+
+This is particularly helpful when debugging test failures or when you want to see the progress of long-running tests.

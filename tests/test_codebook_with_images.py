@@ -44,6 +44,7 @@ def test_codebook_with_images(tmp_path):
     supported_exts = {'.png', '.jpg', '.jpeg', '.bmp', '.gif', '.tif', '.tiff'}
     if footer_image_path != "":
         footer_ext = os.path.splitext(footer_image_path)[1].lower()
+        print(f"Footer image extension: {footer_ext}")
         footer_impage_path_to_use = footer_image_path if footer_ext in supported_exts else ""
         if footer_image_path == "":
             print(f"Skipping unsupported footer image format: {footer_image_path}")
@@ -56,6 +57,8 @@ def test_codebook_with_images(tmp_path):
             print(f"Skipping unsupported figure image format: {figure_path}")
     else:
         figure_to_use = None
+
+    print(f"\nUsing footer image: {footer_impage_path_to_use} \n")
 
     # Pass figures as a list if valid, else None
     figures_param = [figure_to_use] if figure_to_use else None

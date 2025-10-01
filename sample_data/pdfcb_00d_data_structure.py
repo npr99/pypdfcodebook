@@ -54,7 +54,7 @@ DATA_STRUCTURE = {
             '2. Tenure status is not applicable for vacant not occupied housing units. \n \n'
             '3. Tenure status is not applicable for group quarters. \n \n'
             '4. To verify results compare table to: \n \n'
-            'https://data.census.gov/cedsci/table?g=0500000US{state_county}&tid=DECENNIALSF12010.H16.'
+            'https://data.census.gov/cedsci/table?g=0500000US37156&tid=DECENNIALSF12010.H16.'
                 ]),
         'primary_key' : 'huid',
         'pop_var' : 'numprec'},

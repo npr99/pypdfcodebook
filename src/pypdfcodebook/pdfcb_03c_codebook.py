@@ -695,7 +695,7 @@ class codebook():
         pdf.ln()
         pdf.add_page()
         for variable in self.datastructure.keys():
-            print(variable)
+            #print(variable)
             dtype = self.datastructure[variable].get('DataType', '')
             pytype = self.datastructure[variable].get('pyType', '')
             if dtype == 'String' and pytype != 'category':
@@ -746,7 +746,7 @@ class codebook():
                     "Categorical codes, labels and frequencies"
                 )
                 ncols = len(table_data[0])
-                print(ncols)
+                #print(ncols)
                 if ncols == 6:
                     cell_widths = [12, pdf.epw - (12 + 24 + 24 + 18 + 18), 24, 24, 18, 18]
                 elif ncols == 5:
@@ -768,6 +768,7 @@ class codebook():
             # Add notes if present
             if 'notes' in self.datastructure[variable]:
                 notes = self.datastructure[variable]['notes']
+                                     
                 pdf.cell(w=0, h=10, text=f"Variable Notes: {variable}", border=0, new_x="LMARGIN", new_y="NEXT")
                 pdf.multi_cell(0, 3, text=notes, new_x="RIGHT", new_y="TOP", align='L', max_line_height=pdf.font_size*2)
                 pdf.ln()

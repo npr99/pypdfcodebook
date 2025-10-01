@@ -102,12 +102,11 @@ class PDF(FPDF):
         self.set_y(self.eph-10)
         
         # Add image if available and valid
-        # TEMPORARILY COMMENTED OUT FOR TESTING
-        # if self.footer_image_path and os.path.exists(str(self.footer_image_path)):
-        #     try:
-        #         self.image(name=str(self.footer_image_path), w=self.epw, x=15, y=self.eph+10)
-        #     except Exception as e:
-        #         print(f"Warning: Could not render image {self.footer_image_path}: {str(e)}")
+        if self.footer_image_path and os.path.exists(str(self.footer_image_path)):
+            try:
+                self.image(name=str(self.footer_image_path), w=self.epw, x=15, y=self.eph+10)
+            except Exception as e:
+                print(f"Warning: Could not render image {self.footer_image_path}: {str(e)}")
 
         # Setting font: helvetica italic 8
         self.set_font("helvetica", "I", 8)
@@ -252,7 +251,7 @@ class PDF(FPDF):
 
         # TABLE CREATION #
         # add title
-        print(title)
+        #print(title)
         if title != '':
             self.multi_cell(0, line_height, title, 
                     border=0, align='j')

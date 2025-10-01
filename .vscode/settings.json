@@ -1,7 +1,27 @@
 {
     "cSpell.ignoreWords": [
+        "HRRC",
+        "LMARGIN",
+        "countfreq",
         "datastructure",
+        "impage",
         "keyterms",
-        "projectoverview"
+        "ncols",
+        "pdfcb",
+        "pdfcodebook",
+        "pdffunctions",
+        "projectoverview",
+        "pypdfcodebook",
+        "pytype",
+        "sampledata",
+        "sampleimage",
+        "testpypi",
+        "toptable",
+        "varid"
+    ],
+    "cSpell.words": [
+        "datadictionary",
+        "outputfolders",
+        "pyproject"
     ]
 }
