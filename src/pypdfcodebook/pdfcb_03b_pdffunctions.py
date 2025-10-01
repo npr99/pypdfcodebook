@@ -9,7 +9,7 @@
 
 import csv
 import os
-from fpdf import FPDF 
+from fpdf import FPDF, XPos, YPos
 from typing import List, Union, Any, Optional
 
 """
@@ -34,14 +34,14 @@ class PDF(FPDF):
     def __init__(self,
         header_text: str = "Header Text",
         footer_text: str = "Footer Text",
-        image_path: Optional[str] = None):
+        footer_image_path: str = ""):
         """
         Initialize a PDF document with custom header and footer text.
 
         Args:
             header_text (str): Text to display in the header.
             footer_text (str): Text to display in the footer.
-            image_path (Optional[str]): Path to an image file to display in the footer.
+            footer_image_path (str): Path to an image file to display in the footer.
                 Can be None if no image is desired. The file must exist and be in a 
                 supported format (PNG, JPG, JPEG, BMP, GIF, TIF, TIFF).
                 If None or file is missing/unsupported, no image will be displayed.
@@ -53,7 +53,7 @@ class PDF(FPDF):
         super().__init__(orientation = "P", unit = "mm", format = "letter")
         self.header_text = header_text
         self.footer_text = footer_text
-        self.image_path = image_path
+        self.footer_image_path = footer_image_path
         
     def header(self) -> None:
         """
@@ -75,7 +75,10 @@ class PDF(FPDF):
         self.cell(w = 30, 
                   h = 10, 
                   text = self.header_text, 
-                  border = 0, ln = 0, align = "C")
+                  border = 0,
+                  new_x = XPos.RIGHT,
+                  new_y = YPos.TOP,
+                  align = "C")
         # Performing a line break:
         self.ln(15)
 
@@ -86,7 +89,7 @@ class PDF(FPDF):
         
         This method is automatically called by FPDF2 when a new page is added.
         The footer includes:
-        - An optional image (if image_path was provided during initialization)
+        - An optional image (if footer_image_path was provided during initialization)
         - Page numbering in format "Page X/{nb}" where {nb} is total pages
         - Custom footer text (provided during initialization)
         
@@ -99,22 +102,29 @@ class PDF(FPDF):
         self.set_y(self.eph-10)
         
         # Add image if available and valid
-        if self.image_path and os.path.exists(str(self.image_path)):
-            try:
-                self.image(name=str(self.image_path), w=self.epw, x=15, y=self.eph+10)
-            except Exception as e:
-                print(f"Warning: Could not render image {self.image_path}: {str(e)}")
-        
+        # TEMPORARILY COMMENTED OUT FOR TESTING
+        # if self.footer_image_path and os.path.exists(str(self.footer_image_path)):
+        #     try:
+        #         self.image(name=str(self.footer_image_path), w=self.epw, x=15, y=self.eph+10)
+        #     except Exception as e:
+        #         print(f"Warning: Could not render image {self.footer_image_path}: {str(e)}")
+
         # Setting font: helvetica italic 8
         self.set_font("helvetica", "I", 8)
         # Printing page number:
         self.ln(23)
         self.cell(w = 0, h = 10, 
                     text = f"Page {self.page_no()}/{{nb}}",
-                    border = 0, ln = 0, align = "C")
-        self.ln()
-        self.cell(w = 0, h = 0, text = self.footer_text, 
-                    border = 0, ln = 0, align = "C")
+                    border = 0,
+                    new_x = XPos.LEFT,
+                    new_y = YPos.NEXT,
+                    align = "C")
+        self.cell(w = 0, h = 0,
+                    text = self.footer_text, 
+                    border = 0,
+                    new_x = XPos.LEFT,
+                    new_y = YPos.TOP,
+                    align = "C")
 
     ## TABLE FUNCTIONS
     # Code from: https://github.com/bvalgard/create-pdf-with-python-fpdf2/blob/master/table_function.py

@@ -12,7 +12,7 @@ import numpy as np
 import csv
 import random
 from datetime import datetime
-from fpdf import FPDF, TextStyle
+from fpdf import FPDF, TextStyle, XPos, YPos
 from typing import Dict, List, Union, Optional, Any
 
 from pypdfcodebook.pdfcb_03b_pdffunctions import PDF
@@ -32,7 +32,7 @@ class codebook():
             outputfolders: Dict[str, str] = {},
             seed: int = 15151,
             figures: Optional[Any] = None,
-            image_path: Optional[str] = None) -> None:
+            footer_image_path: str = "") -> None:
         """
         Initialize a codebook generator for creating PDF documentation of datasets.
         
@@ -56,8 +56,8 @@ class codebook():
                 Defaults to 15151.
             figures (Optional[Any], optional): Figure objects to include in codebook.
                 Defaults to None.
-            image_path (Optional[str], optional): Path to logo/image file for PDF footer.
-                Can be None if no image is desired. Supported formats: PNG, JPG, JPEG, BMP, GIF, TIF, TIFF.
+            footer_image_path (str): Path to logo/image file to display in the PDF footer.
+                An empty string means no footer image. Supported formats: PNG, JPG, JPEG, BMP, GIF, TIF, TIFF.
                 The file must exist and be in a supported format, otherwise it will be ignored.
         
         Returns:
@@ -65,7 +65,7 @@ class codebook():
             
         Note:
             - The datastructure dict should follow a consistent schema for best results
-            - File paths (projectoverview, keyterms, image_path) should be absolute paths and exist
+            - File paths (projectoverview, keyterms, footer_image_path) should be absolute paths and exist
             - Image files must be in supported formats (PNG, JPG, JPEG, BMP, GIF, TIF, TIFF)
             - Community key must exist in communities dictionary
             - Random seed affects example generation in variable summaries
@@ -80,7 +80,7 @@ class codebook():
         self.outputfolders = outputfolders
         self.seed = seed
         self.figures = figures
-        self.image_path = image_path
+        self.footer_image_path = footer_image_path
 
     def render_toc(self, pdf: Any, outline: List[Any]) -> None:
         """
@@ -336,7 +336,9 @@ class codebook():
         pdf.set_font("Times", size=12)
         line_height = pdf.font_size
         pdf.multi_cell(w=pdf.epw, h = line_height,
-                    txt = txt, ln = 2, 
+                    text = txt,
+                    new_x = XPos.LEFT,
+                    new_y = YPos.NEXT,
                     max_line_height=line_height*2,
                     align='L', markdown=True)
 
@@ -806,7 +808,7 @@ class codebook():
         pdf = PDF(
             header_text=header_text,
             footer_text=f"{self.output_filename} | Generated: {timestamp}",
-            image_path=self.image_path
+            footer_image_path=self.footer_image_path
         )
 
         pdf.set_margins(left=15, top=10)

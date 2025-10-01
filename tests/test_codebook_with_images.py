@@ -12,7 +12,7 @@ def test_codebook_with_images(tmp_path):
     keyterms_path = os.path.join(sample_dir,        'pdfcb_00b_keyterms.md')
     csv_path = os.path.join(sample_dir,             'pdfcb_00c_sampledata.csv')
     datastructure_path = os.path.join(sample_dir,   'pdfcb_00d_data_structure.py')
-    banner_path = os.path.join(sample_dir, 'IN-CORE_HRRC_Banner.png')
+    footer_image_path = os.path.join(sample_dir, 'IN-CORE_HRRC_Banner.png')
     figure_path = os.path.join(sample_dir, 'pdfcb_00e_sampleimage.jpg')
 
     # Check if paths exist, else set to empty string
@@ -20,7 +20,7 @@ def test_codebook_with_images(tmp_path):
     keyterms_path = keyterms_path if os.path.exists(keyterms_path) else ""
     csv_path = csv_path if os.path.exists(csv_path) else ""
     datastructure_path = datastructure_path if os.path.exists(datastructure_path) else ""
-    banner_path = banner_path if os.path.exists(banner_path) else None
+    footer_image_path = footer_image_path if os.path.exists(footer_image_path) else ""
     figure_path = figure_path if os.path.exists(figure_path) else None
 
     # Load CSV
@@ -42,13 +42,13 @@ def test_codebook_with_images(tmp_path):
 
     # Check image formats before PDF creation
     supported_exts = {'.png', '.jpg', '.jpeg', '.bmp', '.gif', '.tif', '.tiff'}
-    if banner_path is not None:
-        banner_ext = os.path.splitext(banner_path)[1].lower()
-        banner_to_use = banner_path if banner_ext in supported_exts else None
-        if banner_to_use is None:
-            print(f"Skipping unsupported banner image format: {banner_path}")
+    if footer_image_path != "":
+        footer_ext = os.path.splitext(footer_image_path)[1].lower()
+        footer_impage_path_to_use = footer_image_path if footer_ext in supported_exts else ""
+        if footer_image_path == "":
+            print(f"Skipping unsupported footer image format: {footer_image_path}")
     else:
-        banner_to_use = None
+        footer_impage_path_to_use = ""
     if figure_path is not None:
         figure_ext = os.path.splitext(figure_path)[1].lower()
         figure_to_use = figure_path if figure_ext in supported_exts else None
@@ -68,7 +68,7 @@ def test_codebook_with_images(tmp_path):
         output_filename=output_filename,
         outputfolders=outputfolders,
         figures=figures_param,
-        image_path=banner_to_use
+        footer_image_path=footer_impage_path_to_use
     )
     pdfcodebook.create_codebook()
 
