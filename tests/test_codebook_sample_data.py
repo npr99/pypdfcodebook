@@ -37,9 +37,7 @@ def test_codebook_with_sample_data(tmp_path):
         projectoverview=projectoverview_path,
         keyterms=keyterms_path,
         output_filename=output_filename,
-        outputfolders=outputfolders,
-        figures=None,      # or your test value
-        image_path=""      # empty string instead of None to avoid file error
+        outputfolders=outputfolders
     )
     pdfcodebook.create_codebook()
 

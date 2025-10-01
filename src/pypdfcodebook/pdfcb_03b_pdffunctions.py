@@ -8,8 +8,9 @@
 """
 
 import csv
-from fpdf import FPDF 
-from typing import List, Union, Any 
+import os
+from fpdf import FPDF, XPos, YPos
+from typing import List, Union, Any, Optional
 
 """
 Help to make Codebook PDF
@@ -31,16 +32,19 @@ https://github.com/jorisschellekens/borb
 # Header is a FPDF2 function that is called with addpage
 class PDF(FPDF):
     def __init__(self,
-            header_text: str = "Header Text",
-            footer_text: str = "Footer Text",
-            image_path:  str = ""):
+        header_text: str = "Header Text",
+        footer_text: str = "Footer Text",
+        footer_image_path: str = ""):
         """
         Initialize a PDF document with custom header and footer text.
 
         Args:
             header_text (str): Text to display in the header.
             footer_text (str): Text to display in the footer.
-            image_path (str): Path to an image file to display in the footer.
+            footer_image_path (str): Path to an image file to display in the footer.
+                Can be None if no image is desired. The file must exist and be in a 
+                supported format (PNG, JPG, JPEG, BMP, GIF, TIF, TIFF).
+                If None or file is missing/unsupported, no image will be displayed.
         """
         # Help with understating super().__init__()
         # https://rhettinger.wordpress.com/2011/05/26/super-considered-super/
@@ -49,7 +53,7 @@ class PDF(FPDF):
         super().__init__(orientation = "P", unit = "mm", format = "letter")
         self.header_text = header_text
         self.footer_text = footer_text
-        self.image_path = image_path
+        self.footer_image_path = footer_image_path
         
     def header(self) -> None:
         """
@@ -71,7 +75,10 @@ class PDF(FPDF):
         self.cell(w = 30, 
                   h = 10, 
                   text = self.header_text, 
-                  border = 0, ln = 0, align = "C")
+                  border = 0,
+                  new_x = XPos.RIGHT,
+                  new_y = YPos.TOP,
+                  align = "C")
         # Performing a line break:
         self.ln(15)
 
@@ -82,7 +89,7 @@ class PDF(FPDF):
         
         This method is automatically called by FPDF2 when a new page is added.
         The footer includes:
-        - An optional image (if image_path was provided during initialization)
+        - An optional image (if footer_image_path was provided during initialization)
         - Page numbering in format "Page X/{nb}" where {nb} is total pages
         - Custom footer text (provided during initialization)
         
@@ -91,21 +98,32 @@ class PDF(FPDF):
         Returns:
             None: This method modifies the PDF document in-place.
         """
-        # Rendering logo:
-        if self.image_path != "":
-            self.image(name = self.image_path, w=self.epw, x = 15, y = self.eph+10)
-        # Position cursor at 1.4 inches from bottom:
+        # Position cursor for footer content
         self.set_y(self.eph-10)
+        
+        # Add image if available and valid
+        if self.footer_image_path and os.path.exists(str(self.footer_image_path)):
+            try:
+                self.image(name=str(self.footer_image_path), w=self.epw, x=15, y=self.eph+10)
+            except Exception as e:
+                print(f"Warning: Could not render image {self.footer_image_path}: {str(e)}")
+
         # Setting font: helvetica italic 8
         self.set_font("helvetica", "I", 8)
         # Printing page number:
         self.ln(23)
         self.cell(w = 0, h = 10, 
                     text = f"Page {self.page_no()}/{{nb}}",
-                    border = 0, ln = 0, align = "C")
-        self.ln()
-        self.cell(w = 0, h = 0, text = self.footer_text, 
-                    border = 0, ln = 0, align = "C")
+                    border = 0,
+                    new_x = XPos.LEFT,
+                    new_y = YPos.NEXT,
+                    align = "C")
+        self.cell(w = 0, h = 0,
+                    text = self.footer_text, 
+                    border = 0,
+                    new_x = XPos.LEFT,
+                    new_y = YPos.TOP,
+                    align = "C")
 
     ## TABLE FUNCTIONS
     # Code from: https://github.com/bvalgard/create-pdf-with-python-fpdf2/blob/master/table_function.py
@@ -233,7 +251,7 @@ class PDF(FPDF):
 
         # TABLE CREATION #
         # add title
-        print(title)
+        #print(title)
         if title != '':
             self.multi_cell(0, line_height, title, 
                     border=0, align='j')
@@ -254,10 +272,10 @@ class PDF(FPDF):
             else:
                 width = col_width
             self.multi_cell(width, line_height, 
-                    datum, border=0, 
-                    align=align_header, ln=3, 
-                    max_line_height=self.font_size)
-            x_right = self.get_x()
+                text=datum, border=0, 
+                align=align_header, new_x="RIGHT", new_y="TOP", 
+                max_line_height=self.font_size)
+        x_right = self.get_x()
         self.ln(line_height) # move cursor back to the left margin
         y2 = self.get_y()
         # Add lines around headers
@@ -268,23 +286,21 @@ class PDF(FPDF):
         self.set_fill_color(224, 235, 255)
         fill = False
         # loop over rows
-        for i in range(len(data)):
-            row = data[i]
-            # Loop over columns
-            for i in range(len(row)):
-                datum = row[i]
+        for row in data:
+            for j in range(len(row)):
+                datum = row[j]
                 if not isinstance(datum, str):
                     datum = str(datum)
                 # Handle both single width and list of widths
                 if isinstance(col_width, list):
-                    adjusted_col_width = col_width[i]
+                    adjusted_col_width = col_width[j]
                 else:
                     adjusted_col_width = col_width
                 self.multi_cell(adjusted_col_width, 
-                        line_height, datum, 
-                        border=0, align=align_data, ln=3,
-                        max_line_height=self.font_size* line_space,
-                        fill = fill) 
+                    line_height, text=datum, 
+                    border=0, align=align_data, new_x="RIGHT", new_y="TOP",
+                    max_line_height=self.font_size* line_space,
+                    fill = fill)
             fill = not fill
             self.ln(self.font_size * line_space) # move cursor back to the left margin
         # Add line to bottom of table
