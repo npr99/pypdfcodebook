@@ -2,6 +2,7 @@
 
 You have two main options for creating a clean Python environment for development and testing in VS Code:
 
+# If this is the first time...
 ## Option 1: Using Anaconda (PowerShell or Anaconda Prompt)
 
 1. Open Anaconda Prompt or PowerShell.
@@ -48,48 +49,22 @@ You have two main options for creating a clean Python environment for developmen
 - Always activate your environment before running Python commands or installing packages.
 - Use `.venv` as the folder name for easy auto-detection by VS Code.
 
-# TestPyPI Publishing & Installation Guide
-
-This guide walks you through creating a clean environment, building, uploading, and testing your Python package on TestPyPI using conda and pip.
-
-## 1. Remove Old Environment (if needed)
+**Remove old environment if needed**
 ```sh
 conda remove -n pypdfcodebook --all
 ```
 
-## 2. Create a New Environment
-```sh
-conda create -n pypdfcodebook python=3.12
-conda activate pypdfcodebook
-```
-------
-## Virtual Environment Option
-
-```sh
-.\venv\Scripts\Activate.ps1
-```
-
-## 2a. (Recommended) Upgrade pip
+**(Recommended)**
 ```sh
 python -m pip install --upgrade pip
 ```
 
-## 3. Install Core Packages with Conda
-```sh
-conda install numpy pandas seaborn
-```
+# TestPyPI Publishing & Installation Guide
 
-## 4. Install Other Useful Packages
-```sh
-conda install matplotlib jupyter
-```
+This guide walks you through creating a clean environment, building, uploading, and testing your Python package on TestPyPI using conda and pip.
 
-## 5. Install Build Tools with pip
-```sh
-pip install build twine fpdf2
-```
 
-## 6. Clean Old Builds (Recommended)
+## 1. Clean Old Builds (Recommended)
 
 Before building, delete any old files in the `dist/` directory to avoid uploading duplicate versions. It's also important to remove any `.egg-info` folders, which store metadata from previous builds and can cause packaging or upload issues if stale:
 
@@ -121,19 +96,19 @@ Cleaning these before each build ensures a fresh, reliable package is created an
 - Under: https://test.pypi.org/manage/account/ scroll down to API tokens
 - Make sure your `.pypirc` file is set up with your TestPyPI token. See [pypirc_instructions.md](pypirc_instructions.md) for setup details.
 
-## 7. Build Your Package
+## 2. Build Your Package
 ```sh
 python -m build
 ```
 
 _NOTE_: Check that the version in the terminal output (e.g., `Successfully built pypdfcodebook-0.3.1.tar.gz`) matches the version set in both `pyproject.toml` and `src/pypdfcodebook/__init__.py`.
 
-## 8. Upload to TestPyPI
+## 3. Upload to TestPyPI
 ```sh
 twine upload --repository testpypi dist/*
 ```
 
-## 9. Test Install from TestPyPI
+## 4. Test Install from TestPyPI
 If you are re-installing in an existing environment, uninstall first:
 ```sh
 pip uninstall pypdfcodebook
@@ -145,7 +120,7 @@ pip install --upgrade --no-cache-dir --index-url https://test.pypi.org/simple/ -
 If you do not get the expected version, try again after a few minutes or check the [TestPyPI project page](https://test.pypi.org/project/pypdfcodebook/) to verify the upload.
 
 
-## 10. Test the Installed Package in Python
+## 5. Test the Installed Package in Python
 After installing, open a Python interpreter 
 ```sh
 python
@@ -163,7 +138,7 @@ exit()
 If you see the version number and no errors, the install was successful.
 
 
-## 11. (Optional) Run Tests
+## 6. (Optional) Run Tests
 If you have a test suite, first install pytest (if not already installed):
 ```sh
 pip install pytest
