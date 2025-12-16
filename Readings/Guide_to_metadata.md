@@ -96,6 +96,7 @@ Comprehensive metadata is essential for making data FAIR (Findable, Accessible, 
 
 1. ICPSR. "A Guide to Metadata." [Video Resource](https://www.bing.com/videos/riverview/relatedvideo?q=ICPSR+guide+to+metadata)
 2. ICPSR. "ICPSR Study Schema Documentation." [ICPSR Metadata Guide](https://icpsr.github.io/metadata/icpsr_study_schema/)
+2. ICPSR. "What is a codebook?" [ICPSR Guide](https://www.icpsr.umich.edu/sites/icpsr/posts/shared/what-is-a-codebook)
 3. StataCorp. "Stata Codebook Reference Manual." [PDF Manual](https://www.stata.com/manuals13/dcodebook.pdf#dcodebook)
 4. DDI Alliance. "Create a Codebook." [DDI Codebook Guide](https://ddialliance.org/create-a-codebook)
 5. The Turing Way. "Metadata in Research Data Management." [The Turing Way Book](https://book.the-turing-way.org/reproducible-research/rdm/rdm-metadata)

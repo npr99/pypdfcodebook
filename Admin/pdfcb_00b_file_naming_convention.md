@@ -2,6 +2,8 @@
 For more information, see the official PEP8 documentation: https://peps.python.org/pep-0008/
 # File Naming Convention for Data Science Workflow
 
+Project mnemonic = pdfcb: PDF Codebook
+
 This repository uses a structured file naming convention to ensure clarity, reproducibility, and traceability throughout the data science workflow. The convention is as follows:
 
 ```

@@ -32,7 +32,7 @@ def test_codebook_with_sample_data(tmp_path):
     # Create codebook
     pdfcodebook = codebook(
         input_df=input_df,
-        header_title='Housing Unit Inventory',
+        header_title='Test pyPDFCodebook',
         datastructure=datastructure,
         projectoverview=projectoverview_path,
         keyterms=keyterms_path,

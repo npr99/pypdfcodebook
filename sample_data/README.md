@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/1059657046.svg)](https://doi.org/10.5281/zenodo.17956282)
+
 # Sample Data and Templates for pypdfcodebook
 
 This folder contains example files to help users understand the required and optional inputs for generating a codebook.

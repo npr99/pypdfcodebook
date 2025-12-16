@@ -1,9 +1,2 @@
 # pypdfcodebook
-A Python package for generating PDF codebooks from tabular data. Quickly create project descriptions, data dictionaries, and variable summaries with customizable formatting. Ideal for data science, reproducible research, and sharing dataset documentation.
-
-The inspiration for this python package:
-
-1. STATA Codebook Command
-2. ICSPR Codebooks
-3. Trying to follow Data Documentation Initiative Controlled Vocabularies:
-https://ddialliance.org/controlled-vocabularies
+pyPDFCodeBook helps researchers and data professionals create clear, attractive codebooks for tabular datasets. Codebooks document essential metadata—project descriptions, data provenance, variable definitions, and summaries—ensuring your data is understandable and reproducible. While datasets contain values, they rarely explain what each column or row represents. Codebooks fill this gap by providing structured, self-explanatory documentation. They reinforce best practices such as tidy data, unique keys, and transparent variable origins. With pyPDFCodeBook, generating a professional, easy-to-read codebook takes just a few clicks—laying the foundation for good data science and reproducible research. Remember: You are your number one data user, so help your future self out and document your metadata.

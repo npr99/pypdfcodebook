@@ -14,17 +14,18 @@ https://github.com/npr99/pypdfcodebook/issues/14
 
 
 
+### Start MCP server
+- Goto the file  `.vscode\mcp.json`
+- Click the Start button
+![Screenshot of mcp.json file](../.github/images/vscode_mcp_server_2025-12-16.jpg)
 
-Start MCP server
-
-.vscode\mcp.json
-
-Then start a new chat in Agent Mode
+### Test MCP Server is working
+Start a new chat in Agent Mode
 
 Example prompt to check that MCP is working
 
 '''sh
-Hello - I am ready to work on Issue #25. Could you please summarize the issue.
+Summarize an open issue.
 '''
 
 

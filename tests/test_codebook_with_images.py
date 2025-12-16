@@ -64,7 +64,7 @@ def test_codebook_with_images(tmp_path):
     figures_param = [figure_to_use] if figure_to_use else None
     pdfcodebook = codebook(
         input_df=input_df,
-        header_title='Housing Unit Inventory',
+        header_title='Test pyPDFCodebook with Images',
         datastructure=datastructure,
         projectoverview=projectoverview_path,
         keyterms=keyterms_path,
