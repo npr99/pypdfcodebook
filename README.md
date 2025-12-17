@@ -63,8 +63,6 @@ cb = codebook(
     input_df=your_dataframe,
     header_title='Your Project Name',
     datastructure=your_data_structure,
-    projectoverview='',
-    keyterms='',
     output_filename='your_codebook'
 )
 cb.create_codebook()
