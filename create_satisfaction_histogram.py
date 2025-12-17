@@ -102,7 +102,7 @@ weighted_median = sorted_df[cumulative_weights >= median_position]['satscore'].i
 plt.tight_layout()
 
 # Save the image
-output_path = 'sample_data/satisfaction_histogram.png'
+output_path = 'sample_data/pdfcb_00e_sampleimage.png'
 plt.savefig(output_path, dpi=150, bbox_inches='tight', 
             facecolor='white', edgecolor='none')
 

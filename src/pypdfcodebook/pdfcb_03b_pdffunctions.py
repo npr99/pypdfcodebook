@@ -43,9 +43,10 @@ class PDF(FPDF):
             header_text (str): Text to display in the header.
             footer_text (str): Text to display in the footer.
             footer_image_path (str): Path to an image file to display in the footer.
-                Can be None if no image is desired. The file must exist and be in a 
-                supported format (PNG, JPG, JPEG, BMP, GIF, TIF, TIFF).
-                If None or file is missing/unsupported, no image will be displayed.
+                If empty string, uses default pypdfcodebook logo. To disable footer image
+                entirely, pass None. The file must exist and be in a supported format 
+                (PNG, JPG, JPEG, BMP, GIF, TIF, TIFF). If file is missing/unsupported,
+                no image will be displayed.
         """
         # Help with understating super().__init__()
         # https://rhettinger.wordpress.com/2011/05/26/super-considered-super/
@@ -54,7 +55,19 @@ class PDF(FPDF):
         super().__init__(orientation = "P", unit = "mm", format = "letter")
         self.header_text = header_text
         self.footer_text = footer_text
-        self.footer_image_path = footer_image_path
+        
+        # Use default logo if no image path provided
+        if footer_image_path == "":
+            # Get the directory where this script is located
+            current_dir = os.path.dirname(__file__)
+            default_logo = os.path.join(current_dir, "pdfcb_00a_pypdfcodebooklogo_2025-12-17.png")
+            self.footer_image_path = default_logo if os.path.exists(default_logo) else ""
+        elif footer_image_path is None:
+            # Explicitly disable footer image
+            self.footer_image_path = ""
+        else:
+            # Use provided path
+            self.footer_image_path = footer_image_path
         
     def calculate_footer_image_size(self, image_path: str, max_height: float = 15.0) -> Tuple[Optional[float], Optional[float]]:
         """

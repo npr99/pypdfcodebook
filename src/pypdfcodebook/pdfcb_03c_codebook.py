@@ -10,6 +10,7 @@
 import pandas as pd
 import numpy as np
 import csv
+import os
 import random
 from datetime import datetime
 from fpdf import FPDF, TextStyle, XPos, YPos
@@ -54,8 +55,9 @@ class codebook():
                 Defaults to {}.
             seed (int, optional): Random seed for reproducible example generation.
                 Defaults to 15151.
-            figures (Optional[Any], optional): Figure objects to include in codebook.
-                Defaults to None.
+            figures (Optional[List[str]], optional): List of figure file paths to include 
+                in codebook. Figures are automatically sized and positioned in a dedicated 
+                "Figures" section before key terms. Defaults to None.
             footer_image_path (str): Path to logo/image file to display in the PDF footer.
                 An empty string means no footer image. Supported formats: PNG, JPG, JPEG, BMP, GIF, TIF, TIFF.
                 The file must exist and be in a supported format, otherwise it will be ignored.
@@ -340,9 +342,124 @@ class codebook():
                     new_x = XPos.LEFT,
                     new_y = YPos.NEXT,
                     max_line_height=line_height*2,
-                    align='L', markdown=True)
+                    align='L', markdown=True)  
 
-        pdf.add_page()  
+    def add_figures(self, pdf: Any) -> None:
+        """
+        Add a Figures section to the PDF document.
+        
+        This method processes the figures provided during initialization and adds them
+        to the codebook with automatic sizing and layout optimization. Large figures
+        are resized to fit on a page, while small figures are arranged to fit multiple
+        images per page when possible.
+        
+        The section includes:
+        - A section header "Figures"
+        - Automatic figure sizing and positioning
+        - Multiple small figures per page when appropriate
+        - Proper spacing and layout
+        
+        Args:
+            pdf (Any): The PDF object to add the figures section to.
+                Should be an instance of the PDF class with FPDF2 functionality.
+        
+        Returns:
+            None: This method modifies the PDF document in-place.
+            
+        Note:
+            - Figures are processed in the order provided in self.figures
+            - Large images are automatically resized to fit page dimensions
+            - Small images are arranged to optimize page usage
+            - Supported formats: PNG, JPG, JPEG, BMP, GIF, TIF, TIFF
+            - Invalid or missing figure files are skipped with warnings
+        """
+        if not self.figures or len(self.figures) == 0:
+            return
+            
+        # Filter out None values and check file existence
+        valid_figures = []
+        for figure in self.figures:
+            if figure and os.path.exists(str(figure)):
+                valid_figures.append(str(figure))
+            elif figure:
+                print(f"Warning: Figure file not found: {figure}")
+                
+        if not valid_figures:
+            return
+            
+        pdf.start_section("Figures")
+        pdf.ln()
+        
+        # Calculate usable page dimensions
+        max_width = pdf.epw  # Effective page width
+        max_height = pdf.eph - 40  # Effective page height minus margins for headers/footers
+        
+        current_y = pdf.get_y()
+        figures_on_current_page = 0
+        
+        for i, figure_path in enumerate(valid_figures):
+            try:
+                # Import PIL Image here to calculate dimensions
+                from PIL import Image
+                
+                # Get image dimensions
+                with Image.open(figure_path) as img:
+                    img_width_px, img_height_px = img.size
+                    
+                # Convert pixels to mm (assuming 96 DPI)
+                px_to_mm = 25.4 / 96
+                img_width_mm = img_width_px * px_to_mm
+                img_height_mm = img_height_px * px_to_mm
+                
+                # Calculate scaling to fit page
+                width_scale = max_width / img_width_mm
+                height_scale = max_height / img_height_mm
+                scale_factor = min(width_scale, height_scale, 1.0)  # Don't scale up
+                
+                # Calculate final dimensions
+                final_width = img_width_mm * scale_factor
+                final_height = img_height_mm * scale_factor
+                
+                # Check if image fits on current page
+                remaining_height = pdf.eph - current_y - 20  # 20mm margin
+                
+                # If this is a large image or won't fit, start new page
+                if (final_height > remaining_height/2 and figures_on_current_page > 0) or \
+                   (final_height > remaining_height):
+                    pdf.add_page()
+                    current_y = pdf.get_y()
+                    figures_on_current_page = 0
+                
+                # Center the image horizontally
+                x_position = (pdf.w - final_width) / 2
+                y_position = current_y
+                
+                # Add the image
+                pdf.image(name=figure_path, 
+                         x=x_position, 
+                         y=y_position,
+                         w=final_width, 
+                         h=final_height)
+                
+                # Update position for next image
+                current_y = y_position + final_height + 10  # 10mm spacing
+                figures_on_current_page += 1
+                
+                # For small images, check if we can fit another on the same page
+                if final_height < max_height/3:  # Small image
+                    pdf.set_y(current_y)
+                else:  # Large image, start new page for next figure
+                    if i < len(valid_figures) - 1:  # Not the last figure
+                        pdf.add_page()
+                        current_y = pdf.get_y()
+                        figures_on_current_page = 0
+                        
+            except Exception as e:
+                print(f"Warning: Could not process figure {figure_path}: {str(e)}")
+                continue
+                
+        # Add page break after figures section
+        pdf.add_page()
 
     def numeric_table(self, variable: str) -> pd.DataFrame:
         """
@@ -536,17 +653,35 @@ class codebook():
             else:
                 characteristics[characteristic] = ''
 
+        # Calculate weighted total cases if weight variable exists
+        weighted_total_fmt = ''
+        weight_var = self.datastructure[variable].get('weight_var', '')
+        if weight_var and weight_var in self.input_df.columns:
+            # Sum weights for valid (non-missing) cases
+            clean_df = self.input_df[[variable, weight_var]].dropna()
+            if len(clean_df) > 0:
+                weighted_total = clean_df[weight_var].sum()
+                weighted_total_fmt = f"{weighted_total:,.2f}"
+
         # Initialize base table data
         table_data_list = [
             ['variable type', f"categorical ({characteristics['DataType']})"],
             ['categorical type', f"{characteristics['categorical_type']}"],
             ['total cases', total_cases_fmt],
             ['valid cases', valid_count_fmt],
-            ['missing cases', missing_count_fmt],
+            ['missing cases', missing_count_fmt]
+        ]
+
+        # Add weighted total cases if calculated
+        if weighted_total_fmt:
+            table_data_list.append(['weighted total cases', weighted_total_fmt])
+
+        # Add remaining metadata
+        table_data_list.extend([
             ['unit of measure', characteristics['MeasureUnit']],
             ['unit of analysis', characteristics['AnalysisUnit']],
             ['range', f"minimum value: {descriptive_stats['min']} to  maximum value: {descriptive_stats['max']}"]
-        ]
+        ])
 
         # Add mean calculations for ordinal categorical variables
         if characteristics['categorical_type'].lower() == 'ordinal':
@@ -810,6 +945,7 @@ class codebook():
         - Project overview
         - Data dictionary
         - Variable details and notes (with summary tables)
+        - Figures (if provided) with automatic sizing and layout
         - Key terms and definitions
         - Custom footer with filename and generation timestamp
 
@@ -821,7 +957,7 @@ class codebook():
 
         Note:
             - The output file is saved as <outputfolders['top']>/<output_filename>.pdf
-            - If figures are provided, they must be added by the user after PDF creation.
+            - Figures are automatically processed, resized, and positioned if provided
             - All section content is generated in sequence for clarity and reproducibility.
         """
         header_text = self.header_title
@@ -879,12 +1015,12 @@ class codebook():
         # Add Variable Details and Notes
         self.add_var_summary(pdf)
 
-        # If user provides figures, they must handle figure addition themselves.
-        # This codebook does not generate or add figures automatically.
+        # Add Figures section if figures are provided
+        if self.figures:
+            self.add_figures(pdf)
 
         # Add Key Terms and Definitions
         if self.keyterms != '':
-            pdf.add_page()
             self.add_keyterms(pdf)
 
         # Save codebook

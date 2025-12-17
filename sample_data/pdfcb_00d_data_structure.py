@@ -73,8 +73,8 @@ DATA_STRUCTURE = {
             '1. Statistical weight for population inference and representative results. \n \n'
             '2. Used to adjust for sampling bias and ensure results reflect target population. \n \n'
             '3. Based on sample design for each region. \n \n'
-            '4. Region 1 weight = 2.0, Region 2 weight = 1.0, Region 3 weight = 0.5, Region 4 weight = 2.0. \n \n'
-            '5. Regions 1 and 4 are under sampled regions. Region 3 is over sampled.'
+            '4. Region 1 weight = 10.0, Region 2 weight = 4.0, Region 3 weight = 0.75, Region 4 weight = 12.0. \n \n'
+            '5. Regions 1, 2, and 4 are under sampled regions. Region 3 is over sampled.'
                 ])},
     'age' : 
     {   'label' : 'Age in Years',

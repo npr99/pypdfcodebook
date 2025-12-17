@@ -12,8 +12,8 @@ def test_codebook_with_images(tmp_path):
     keyterms_path = os.path.join(sample_dir,        'pdfcb_00b_keyterms.md')
     csv_path = os.path.join(sample_dir,             'pdfcb_00c_sampledata.csv')
     datastructure_path = os.path.join(sample_dir,   'pdfcb_00d_data_structure.py')
-    footer_image_path = os.path.join(sample_dir, 'pdfcb_00f_pypdfcodebooklogo_2025-12-17.png')
-    figure_path = os.path.join(sample_dir, 'pdfcb_00e_sampleimage.jpg')
+    footer_image_path = os.path.join(sample_dir, 'pdfcb_00f_samplelogo.png')
+    figure_path = os.path.join(sample_dir, 'pdfcb_00e_sampleimage.png')
 
     # Check if paths exist, else set to empty string
     projectoverview_path = projectoverview_path if os.path.exists(projectoverview_path) else ""
@@ -64,7 +64,7 @@ def test_codebook_with_images(tmp_path):
     figures_param = [figure_to_use] if figure_to_use else None
     pdfcodebook = codebook(
         input_df=input_df,
-        header_title='Test pyPDFCodebook with Images',
+        header_title='Regional Satisfaction Survey Codebook',
         datastructure=datastructure,
         projectoverview=projectoverview_path,
         keyterms=keyterms_path,
