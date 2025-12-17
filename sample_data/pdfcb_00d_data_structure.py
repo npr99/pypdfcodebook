@@ -22,6 +22,7 @@ DATA_STRUCTURE = {
         'DataType'  : 'Int',
         'pyType' : "category",
         'categorical' : True,
+        'categorical_type' : 'nominal',
         'AnalysisUnit' : 'Survey response',
         'MeasureUnit' : 'Responses by Region',
         'categories_dict' : {
@@ -35,12 +36,13 @@ DATA_STRUCTURE = {
             '3. East', 
             '4. West'],
         'primary_key' : 'rid',
-        'pop_var' : 'weight'},
+        'weight_var' : 'weight'},
     'satscore' : 
     {   'label' : 'Satisfaction Rating',
         'DataType'  : 'Int',
         'pyType' : "category",
         'categorical' : True,
+        'categorical_type' : 'ordinal',
         'AnalysisUnit' : 'Survey response',
         'MeasureUnit' : 'Satisfaction Level',
         'categories_dict' : {
@@ -60,7 +62,7 @@ DATA_STRUCTURE = {
             '2. Missing values indicate participant did not respond to this question.'
                 ]),
         'primary_key' : 'rid',
-        'pop_var' : 'weight'},
+        'weight_var' : 'weight'},
     'weight' : 
     {   'label' : 'Survey Weight',
         'DataType'  : 'Float',
@@ -87,7 +89,7 @@ DATA_STRUCTURE = {
             '4. Surveys completed between November 2025 and December 2025.'
                 ]),
         'primary_key' : 'rid',
-        'pop_var' : 'weight'},
+        'weight_var' : 'weight'},
 }
 
 # Add additional columns as needed following this structure.

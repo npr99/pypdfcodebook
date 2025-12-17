@@ -529,36 +529,61 @@ class codebook():
 
         # Add additional metadata to table
         characteristics = {}
-        for characteristic in ['DataType', 'AnalysisUnit', 'MeasureUnit']:
+        for characteristic in ['DataType', 'AnalysisUnit', 'MeasureUnit','categorical_type']:
             if characteristic in self.datastructure[variable]:
                 metadata = self.datastructure[variable][characteristic]
                 characteristics[characteristic] = metadata
             else:
                 characteristics[characteristic] = ''
 
-        table_data = np.array([
+        # Initialize base table data
+        table_data_list = [
             ['variable type', f"categorical ({characteristics['DataType']})"],
+            ['categorical type', f"{characteristics['categorical_type']}"],
             ['total cases', total_cases_fmt],
             ['valid cases', valid_count_fmt],
             ['missing cases', missing_count_fmt],
             ['unit of measure', characteristics['MeasureUnit']],
             ['unit of analysis', characteristics['AnalysisUnit']],
             ['range', f"minimum value: {descriptive_stats['min']} to  maximum value: {descriptive_stats['max']}"]
-        ])
+        ]
+
+        # Add mean calculations for ordinal categorical variables
+        if characteristics['categorical_type'].lower() == 'ordinal':
+            try:
+                # Calculate mean for ordinal variables
+                numeric_var = self.input_df[variable].astype(float).dropna()
+                mean_value = f"{numeric_var.mean():.2f}"
+                table_data_list.append(['mean', mean_value])
+                
+                # Calculate weighted mean if weight variable exists
+                weight_var = self.datastructure[variable].get('weight_var', '')
+                if weight_var and weight_var in self.input_df.columns:
+                    # Create clean dataframe for weighted calculation
+                    clean_df = self.input_df[[variable, weight_var]].dropna()
+                    if len(clean_df) > 0:
+                        clean_df[variable] = clean_df[variable].astype(float)
+                        weighted_mean = (clean_df[variable] * clean_df[weight_var]).sum() / clean_df[weight_var].sum()
+                        weighted_mean_fmt = f"{weighted_mean:.2f}"
+                        table_data_list.append(['weighted mean', weighted_mean_fmt])
+            except Exception:
+                # If calculation fails, skip mean calculations
+                pass
+
+        table_data = np.array(table_data_list)
         table = pd.DataFrame(data=table_data, columns=["Variable characteristic", "Variable details"])
         return table
 
     def categorical_countfreq_table(self,
                                     variable,
-                                    primary_key: str = 'huid',
-                                    pop_var: str = ''):
+                                    primary_key: str = 'rid',
+                                    weight_var: str = ''):
         """
         Create table with count and frequency by 
         category for categorical variable with label
 
         primary_key = variable to group by for counts
-
-        pop_var = variable to use to summarize population totals
+        weight_var = variable to use for population weighting (optional)
 
         """
         output_df = self.input_df.copy()
@@ -621,13 +646,12 @@ class codebook():
         categorical_table['Percent '+label_col] = \
             categorical_table['Percent '+label_col].fillna(value='0.00%')
 
-        # Add population totals
-        if pop_var != '':
-            label_col = self.datastructure[pop_var]['MeasureUnit']
-            pop_table = output_df[[pop_var,variable]].groupby(by=variable).sum()
+        # Add population totals if weight variable is specified and exists
+        if weight_var and weight_var in self.input_df.columns:
+            pop_table = output_df[[weight_var,variable]].groupby(by=variable).sum()
             pop_table.reset_index(inplace=True)
             # Rename columns
-            pop_table = pop_table.rename(columns={pop_var:'Weighted Sum',
+            pop_table = pop_table.rename(columns={weight_var:'Weighted Sum',
                                         variable : 'Code'})
 
             # Add percent column
@@ -729,11 +753,11 @@ class codebook():
             # Add table of categories for categorical variables
             if pytype == 'category':
                 pdf.ln()
-                pop_var = self.datastructure[variable].get('pop_var', '')
+                weight_var = self.datastructure[variable].get('weight_var', '')
                 table = self.categorical_countfreq_table(
                     variable=variable,
                     primary_key=self.datastructure[variable]['primary_key'],
-                    pop_var=pop_var
+                    weight_var=weight_var
                 )
                 styled_table = table.copy()
                 styled_table.reset_index(inplace=True)
