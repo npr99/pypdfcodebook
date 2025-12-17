@@ -974,7 +974,7 @@ class codebook():
 
         pdf = PDF(
             header_text=header_text,
-            footer_text=f"{self.output_filename} | Generated: {timestamp}",
+            footer_text=f"{self.output_filename} | Generated using pypdfcodebook: {timestamp}",
             footer_image_path=self.footer_image_path
         )
 

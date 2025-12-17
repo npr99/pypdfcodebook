@@ -43,6 +43,9 @@ dependencies = [
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+pypdfcodebook = ["*.png"]
+
 [project.optional-dependencies]
 dev = ["pytest", "black"]      # For development (formatting, debugging, etc.)
 test = ["pytest", "coverage"]  # For testing and code coverage

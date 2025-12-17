@@ -24,9 +24,12 @@ def test_codebook_with_sample_data(tmp_path):
 
     # Set up output in tests directory
     tests_dir = os.path.dirname(__file__)
-    output_filename_path = os.path.join(tests_dir, "test_codebook.pdf")
-    output_filename = "test_codebook"  # Just the name without extension
-    outputfolders = {'top': tests_dir}
+    output_filename = "test_sample_data"  # Just the name without extension
+    
+    # Output folder
+    output_folder = os.path.abspath("./tests/example_codebooks")
+    os.makedirs(output_folder, exist_ok=True)
+    output_filename_path = os.path.join(output_folder, f"{output_filename}.pdf")
 
 
     # Create codebook
@@ -37,7 +40,7 @@ def test_codebook_with_sample_data(tmp_path):
         projectoverview=projectoverview_path,
         keyterms=keyterms_path,
         output_filename=output_filename,
-        outputfolders=outputfolders
+        outputfolders={'top': output_folder}
     )
     pdfcodebook.create_codebook()
 

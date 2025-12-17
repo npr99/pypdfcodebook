@@ -1,5 +1,5 @@
 import pandas as pd
-from pypdfcodebook.pdfcb_03c_codebook import codebook
+from src.pypdfcodebook.pdfcb_03c_codebook import codebook
 import os
 
 '''
@@ -54,7 +54,7 @@ def test_codebook_no_keyterms_projectoverview():
     }
 
     # Output folder
-    output_folder = os.path.abspath("./tests/output")
+    output_folder = os.path.abspath("./tests/example_codebooks")
     os.makedirs(output_folder, exist_ok=True)
 
     # Create codebook instance with no keyterms or projectoverview

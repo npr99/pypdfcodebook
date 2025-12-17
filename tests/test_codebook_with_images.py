@@ -43,11 +43,12 @@ def test_codebook_with_images(tmp_path):
     spec.loader.exec_module(ds_module)
     datastructure = ds_module.DATA_STRUCTURE
 
-    # Set up output in tests directory
-    tests_dir = os.path.dirname(__file__)
-    output_filename_path = os.path.join(tests_dir, "test_codebook_with_images.pdf")
+
+    # Output folder
     output_filename = "test_codebook_with_images"
-    outputfolders = {'top': tests_dir}
+    output_folder = os.path.abspath("./tests/example_codebooks")
+    os.makedirs(output_folder, exist_ok=True)
+    output_filename_path = os.path.join(output_folder, f"{output_filename}.pdf")
 
     # Validate image formats and process figure list
     supported_exts = {'.png', '.jpg', '.jpeg', '.bmp', '.gif', '.tif', '.tiff'}
@@ -93,7 +94,7 @@ def test_codebook_with_images(tmp_path):
         projectoverview=projectoverview_path,
         keyterms=keyterms_path,
         output_filename=output_filename,
-        outputfolders=outputfolders,
+        outputfolders={'top': output_folder},
         figures=figures_param,
         footer_image_path=footer_image_path_to_use
     )
