@@ -2,14 +2,7 @@
 Create Age Distribution Histogram for Sample Data
 
 Summary of Prompts Used to Create This Figure:
-1. "make another figure that shows the distrubtion of age for the sample data"
-
-This prompt resulted in:
-- 20-bin histogram showing age distribution across survey respondents
-- Statistics box displaying total responses, mean age, median age
-- Professional styling with grid lines and proper labeling
-- Provenance information including data source and creation details
-- High-resolution output suitable for publication
+1. "make another figure that shows the distribution of age for the sample data"
 
 Authors: 
 - Nathanael Rosenheim
