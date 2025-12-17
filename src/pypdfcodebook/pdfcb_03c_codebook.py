@@ -58,7 +58,7 @@ class codebook():
             keyterms (str): Path to markdown file containing key terms and definitions.
             output_filename (str): Base filename for generated PDF (without extension).
             outputfolders (Dict[str, str], optional): Directory paths for outputs.
-                Defaults to {}.
+                Defaults to current working directory if not provided or if 'top' key is missing.
             seed (int, optional): Random seed for reproducible example generation.
                 Defaults to 15151.
             figures (Optional[List[str]], optional): List of figure file paths to include 
@@ -85,7 +85,11 @@ class codebook():
         self.projectoverview = projectoverview
         self.keyterms = keyterms
         self.output_filename = output_filename
-        self.outputfolders = outputfolders
+        # Default to current directory if no output folder specified
+        if not outputfolders or 'top' not in outputfolders:
+            self.outputfolders = {'top': os.getcwd()}
+        else:
+            self.outputfolders = outputfolders
         self.seed = seed
         self.figures = figures
         self.footer_image_path = footer_image_path
@@ -963,6 +967,7 @@ class codebook():
 
         Note:
             - The output file is saved as <outputfolders['top']>/<output_filename>.pdf
+            - If outputfolders is not provided, output is saved to current working directory
             - Figures are automatically processed, resized, and positioned if provided
             - All section content is generated in sequence for clarity and reproducibility.
         """
