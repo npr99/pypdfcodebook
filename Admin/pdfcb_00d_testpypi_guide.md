@@ -21,6 +21,11 @@ You have two main options for creating a clean Python environment for developmen
 ## Option 2: Using venv in the VS Code Terminal
 
 1. Open the integrated terminal in VS Code (Ctrl+` or View → Terminal).
+2. Clean house (optional) - Remove old virtual environment
+	```sh
+	deactivate
+	Remove-Item -Recurse -Force .venv
+	```
 2. Create a new virtual environment in your project folder:
 	```sh
 	python -m venv .venv
@@ -41,7 +46,8 @@ You have two main options for creating a clean Python environment for developmen
 4. Upgrade pip and install required packages:
 	```sh
 	python -m pip install --upgrade pip
-	pip install numpy pandas seaborn matplotlib jupyter build twine fpdf2
+	python.exe -m pip install -e .
+	python.exe -m pip install -e .[dev]
 	```
 5. In VS Code, select the `.venv` environment as your Python interpreter (Ctrl+Shift+P → "Python: Select Interpreter").
 
