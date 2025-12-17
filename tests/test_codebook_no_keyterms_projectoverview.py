@@ -78,7 +78,7 @@ def test_codebook_no_keyterms_projectoverview():
         projectoverview="",  # Not provided
         keyterms="",         # Not provided
         output_filename="test_codebook_v2_explicit_dir",
-        outputfolders={'top': output_folder}
+        outputfolder=output_folder
     )
     cb_explicit.create_codebook()
     

@@ -39,12 +39,12 @@ data = pd.read_csv('your_data.csv')
 # Create a basic codebook (saves to current directory)
 cb = codebook(
     input_df=data,
-    header_title='My Research Project',
     datastructure={},  # Your data structure dictionary
     projectoverview='',  # Path to markdown file or empty string
     keyterms='',  # Path to markdown file or empty string 
     output_filename='my_codebook'
-    # outputfolders is optional - defaults to current directory
+    # header_title is optional - defaults to "Data Codebook"
+    # outputfolder is optional - defaults to current directory
 )
 
 # Generate the PDF codebook
@@ -61,9 +61,11 @@ from pypdfcodebook.pdfcb_03c_codebook import codebook
 # Minimal setup - output saves to current directory
 cb = codebook(
     input_df=your_dataframe,
-    header_title='Your Project Name',
     datastructure=your_data_structure,
+    projectoverview='',
+    keyterms='',
     output_filename='your_codebook'
+    # header_title defaults to "Data Codebook"
 )
 cb.create_codebook()
 ```
@@ -71,15 +73,15 @@ cb.create_codebook()
 ### Custom Output Directory
 
 ```python
-# Specify custom output directory
+# Specify custom output directory and title
 cb = codebook(
     input_df=your_dataframe,
-    header_title='Your Project Name', 
+    header_title='Your Project Name',  # Optional: custom title
     datastructure=your_data_structure,
     projectoverview='',
     keyterms='',
     output_filename='your_codebook',
-    outputfolders={'top': './custom_output_folder/'}
+    outputfolder='./custom_output_folder/'
 )
 cb.create_codebook()
 ```
@@ -95,7 +97,7 @@ cb = codebook(
     projectoverview='path/to/overview.md',
     keyterms='path/to/keyterms.md',
     output_filename='comprehensive_codebook',
-    outputfolders={'top': './output/'},
+    outputfolder='./output/',
     footer_image_path='path/to/logo.png'
 )
 cb.create_codebook()

@@ -40,7 +40,7 @@ def test_codebook_with_sample_data(tmp_path):
         projectoverview=projectoverview_path,
         keyterms=keyterms_path,
         output_filename=output_filename,
-        outputfolders={'top': output_folder}
+        outputfolder=output_folder
     )
     pdfcodebook.create_codebook()
 

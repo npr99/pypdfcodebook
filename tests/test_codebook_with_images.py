@@ -94,7 +94,7 @@ def test_codebook_with_images(tmp_path):
         projectoverview=projectoverview_path,
         keyterms=keyterms_path,
         output_filename=output_filename,
-        outputfolders={'top': output_folder},
+        outputfolder=output_folder,
         figures=figures_param,
         footer_image_path=footer_image_path_to_use
     )

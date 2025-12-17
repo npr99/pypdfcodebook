@@ -31,12 +31,12 @@ class codebook():
     """ 
     def __init__(self,
             input_df: pd.DataFrame,
-            header_title: str,
-            datastructure: Dict[str, Dict[str, Any]],
-            projectoverview: str,
-            keyterms: str,
-            output_filename: str,
-            outputfolders: Dict[str, str] = {},
+            header_title: str = "Data Codebook",
+            datastructure: Dict[str, Dict[str, Any]] = {},
+            projectoverview: str = "",
+            keyterms: str = "",
+            output_filename: str = "pypdfcodebook",
+            outputfolder: str = "",
             seed: int = 15151,
             figures: Optional[Any] = None,
             footer_image_path: str = "") -> None:
@@ -49,7 +49,8 @@ class codebook():
         
         Args:
             input_df (pd.DataFrame): The dataset to create a codebook for.
-            header_title (str): Main title to appear in PDF headers.
+            header_title (str, optional): Main title to appear in PDF headers.
+                Defaults to "Data Codebook".
             datastructure (Dict[str, Dict[str, Any]]): Metadata dictionary defining
                 variable characteristics. Each key is a variable name, values are
                 dictionaries with 'DataType', 'length', 'categorical', 'label',
@@ -57,8 +58,8 @@ class codebook():
             projectoverview (str): Path to markdown file containing project description.
             keyterms (str): Path to markdown file containing key terms and definitions.
             output_filename (str): Base filename for generated PDF (without extension).
-            outputfolders (Dict[str, str], optional): Directory paths for outputs.
-                Defaults to current working directory if not provided or if 'top' key is missing.
+            outputfolder (str, optional): Directory path for output.
+                Defaults to current working directory if not provided.
             seed (int, optional): Random seed for reproducible example generation.
                 Defaults to 15151.
             figures (Optional[List[str]], optional): List of figure file paths to include 
@@ -86,10 +87,7 @@ class codebook():
         self.keyterms = keyterms
         self.output_filename = output_filename
         # Default to current directory if no output folder specified
-        if not outputfolders or 'top' not in outputfolders:
-            self.outputfolders = {'top': os.getcwd()}
-        else:
-            self.outputfolders = outputfolders
+        self.outputfolder = outputfolder if outputfolder else os.getcwd()
         self.seed = seed
         self.figures = figures
         self.footer_image_path = footer_image_path
@@ -966,8 +964,8 @@ class codebook():
             None: The generated PDF is saved to the output folder specified in initialization.
 
         Note:
-            - The output file is saved as <outputfolders['top']>/<output_filename>.pdf
-            - If outputfolders is not provided, output is saved to current working directory
+            - The output file is saved as <outputfolder>/<output_filename>.pdf
+            - If outputfolder is not provided, output is saved to current working directory
             - Figures are automatically processed, resized, and positioned if provided
             - All section content is generated in sequence for clarity and reproducibility.
         """
@@ -1035,6 +1033,6 @@ class codebook():
             self.add_keyterms(pdf)
 
         # Save codebook
-        codebook_filepath = self.outputfolders['top'] + "/" + self.output_filename + '.pdf'
+        codebook_filepath = os.path.join(self.outputfolder, self.output_filename + '.pdf')
         print("Saving codebook to", codebook_filepath)
         pdf.output(codebook_filepath)
