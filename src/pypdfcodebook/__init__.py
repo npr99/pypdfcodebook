@@ -7,7 +7,7 @@
 ******************************************************************************
 """
 
-__version__ = "0.5.2"
+__version__ = "0.5.3"
 
 # For all other functions, import directly from submodules, e.g.:
 # from pypdfcodebook.simple import add_one
