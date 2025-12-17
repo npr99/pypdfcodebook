@@ -12,16 +12,25 @@ def test_codebook_with_images(tmp_path):
     keyterms_path = os.path.join(sample_dir,        'pdfcb_00b_keyterms.md')
     csv_path = os.path.join(sample_dir,             'pdfcb_00c_sampledata.csv')
     datastructure_path = os.path.join(sample_dir,   'pdfcb_00d_data_structure.py')
-    footer_image_path = os.path.join(sample_dir, 'pdfcb_00f_samplelogo.png')
-    figure_path = os.path.join(sample_dir, 'pdfcb_00e_sampleimage.png')
+    footer_image_path = os.path.join(sample_dir, 'pdfcb_00e_samplelogo.png')
+    
+    # Define figure list - users can easily modify this list
+    figure_filenames = [
+        'pdfcb_00f_satisfaction_dist.png',  # Satisfaction histogram
+        'pdfcb_00g_age_dist.png',  # Age distribution
+        'pdfcb_00h_region_dist.png'  # Regional pie charts
+    ]
+    
+    # Convert filenames to full paths
+    figure_list_paths = [os.path.join(sample_dir, filename) for filename in figure_filenames]
 
-    # Check if paths exist, else set to empty string
+    # Check if paths exist, else set to empty string or None
     projectoverview_path = projectoverview_path if os.path.exists(projectoverview_path) else ""
     keyterms_path = keyterms_path if os.path.exists(keyterms_path) else ""
     csv_path = csv_path if os.path.exists(csv_path) else ""
     datastructure_path = datastructure_path if os.path.exists(datastructure_path) else ""
     footer_image_path = footer_image_path if os.path.exists(footer_image_path) else ""
-    figure_path = figure_path if os.path.exists(figure_path) else None
+    # Keep figure_list_paths as is - individual validation happens later
 
     # Load CSV
     input_df = pd.read_csv(csv_path)
@@ -40,28 +49,43 @@ def test_codebook_with_images(tmp_path):
     output_filename = "test_codebook_with_images"
     outputfolders = {'top': tests_dir}
 
-    # Check image formats before PDF creation
+    # Validate image formats and process figure list
     supported_exts = {'.png', '.jpg', '.jpeg', '.bmp', '.gif', '.tif', '.tiff'}
+    
+    # Validate footer image
     if footer_image_path != "":
         footer_ext = os.path.splitext(footer_image_path)[1].lower()
         print(f"Footer image extension: {footer_ext}")
-        footer_impage_path_to_use = footer_image_path if footer_ext in supported_exts else ""
-        if footer_image_path == "":
+        footer_image_path_to_use = footer_image_path if footer_ext in supported_exts else ""
+        if not footer_image_path_to_use:
             print(f"Skipping unsupported footer image format: {footer_image_path}")
     else:
-        footer_impage_path_to_use = ""
-    if figure_path is not None:
-        figure_ext = os.path.splitext(figure_path)[1].lower()
-        figure_to_use = figure_path if figure_ext in supported_exts else None
-        if figure_to_use is None:
-            print(f"Skipping unsupported figure image format: {figure_path}")
-    else:
-        figure_to_use = None
+        footer_image_path_to_use = ""
+    
+    # Process figure list paths
+    figures_to_use = []
+    if figure_list_paths:
+        for figure_path in figure_list_paths:
+            if figure_path and os.path.exists(figure_path):
+                figure_ext = os.path.splitext(figure_path)[1].lower()
+                if figure_ext in supported_exts:
+                    figures_to_use.append(figure_path)
+                    print(f"Added figure: {os.path.basename(figure_path)}")
+                else:
+                    print(f"Skipping unsupported figure format: {os.path.basename(figure_path)}")
+            elif figure_path:
+                print(f"Figure not found: {figure_path}")
 
-    print(f"\nUsing footer image: {footer_impage_path_to_use} \n")
+    print(f"\nUsing footer image: {os.path.basename(footer_image_path_to_use) if footer_image_path_to_use else 'None'}")
+    print(f"Total figures to include: {len(figures_to_use)}")
+    if figures_to_use:
+        print("Figure list:")
+        for i, fig in enumerate(figures_to_use, 1):
+            print(f"  {i}. {os.path.basename(fig)}")
+    print()
 
     # Pass figures as a list if valid, else None
-    figures_param = [figure_to_use] if figure_to_use else None
+    figures_param = figures_to_use if figures_to_use else None
     pdfcodebook = codebook(
         input_df=input_df,
         header_title='Regional Satisfaction Survey Codebook',
@@ -71,7 +95,7 @@ def test_codebook_with_images(tmp_path):
         output_filename=output_filename,
         outputfolders=outputfolders,
         figures=figures_param,
-        footer_image_path=footer_impage_path_to_use
+        footer_image_path=footer_image_path_to_use
     )
     pdfcodebook.create_codebook()
 

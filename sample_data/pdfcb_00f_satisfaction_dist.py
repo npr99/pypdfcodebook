@@ -1,10 +1,28 @@
+"""
+Create Weighted Satisfaction Score Distribution by Region
+Grouped bar chart showing percentage breakdown within each region
+
+Summary of Prompts Used to Create This Figure:
+1. "i want to make a sample image that has a histogram of the satisfaction scores"
+2. "adjust histogram to show weighted values by region"
+3. "instead of stacked make them side by side. remove the statistics in the box"
+4. "adjust so that instead of counts the values are percentage within region"
+5. "remove percentage labels"
+
+Authors: 
+- Nathanael Rosenheim
+- LLM: Claude Sonnet 4
+
+Date Created: December 17, 2025
+"""
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from datetime import datetime
 
 # Read the sample data
-df = pd.read_csv('sample_data/pdfcb_00c_sampledata.csv')
+df = pd.read_csv('pdfcb_00c_sampledata.csv')
 
 # Remove missing values for the histogram
 df_clean = df[['satscore', 'weight', 'region']].dropna()
@@ -102,7 +120,7 @@ weighted_median = sorted_df[cumulative_weights >= median_position]['satscore'].i
 plt.tight_layout()
 
 # Save the image
-output_path = 'sample_data/pdfcb_00e_sampleimage.png'
+output_path = 'pdfcb_00f_satisfaction_dist.png'
 plt.savefig(output_path, dpi=150, bbox_inches='tight', 
             facecolor='white', edgecolor='none')
 
@@ -110,23 +128,3 @@ plt.savefig(output_path, dpi=150, bbox_inches='tight',
 plt.close()
 
 print(f"Weighted histogram saved as: {output_path}")
-
-# Print detailed statistics
-print(f"\nWeighted Satisfaction Score Statistics:")
-print(f"Weighted Mean: {weighted_mean:.2f}")
-print(f"Weighted Median: {weighted_median:.1f}")
-print(f"Total Weighted Responses: {total_weighted_responses:.0f}")
-print(f"Total Unweighted Responses: {len(df_clean)}")
-
-print(f"\nWeighted Percentages by Score and Region:")
-for score in range(1, 6):
-    print(f"\nScore {score}:")
-    for region in sorted(df_clean['region'].unique()):
-        percentage = weighted_percentages_by_region[region][score-1]
-        print(f"  {region_labels[region]}: {percentage:.1f}%")
-
-print(f"\nRegion Totals (should all be 100%):")
-for region in sorted(df_clean['region'].unique()):
-    total_pct = sum(weighted_percentages_by_region[region])
-    region_weight = df_clean[df_clean['region'] == region]['weight'].sum()
-    print(f"Region {region} ({region_labels[region]}): {total_pct:.1f}% | Total Weight: {region_weight:.0f}")
