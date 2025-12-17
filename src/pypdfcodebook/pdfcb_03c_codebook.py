@@ -101,6 +101,7 @@ class codebook():
         self.seed = seed
         self.figures = figures
         self.footer_image_path = footer_image_path
+        self.instruction_mode = instruction_mode
 
     def _generate_default_datastructure(self) -> Dict[str, Dict[str, Any]]:
         """
@@ -189,67 +190,42 @@ class codebook():
             toc_line = f"{section_title} {leader} {page_str}"
             pdf.cell(0, pdf.font_size * 2, text=toc_line, border=0, new_x="LMARGIN", new_y="NEXT", link=link)
 
-    def add_projectoverview(self, pdf: Any) -> None:
+    def _add_markdown_section(self, pdf: Any, 
+                              section_title: str, 
+                              file_path: str, 
+                              add_page_break: bool = False) -> None:
         """
-        Add a Project Overview section to the PDF document.
-
-        A project overview is a summary that describes the purpose, scope, and key details
-        of a project or dataset. It provides essential context for anyone using the data,
-        helping them understand why the data was collected, what it represents, and how it
-        should be interpreted. Including a project overview is important because it orients
-        new users, supports transparency, and ensures that the data is used appropriately.
-
-        This method reads a markdown file containing the project overview/summary
-        and adds it as a formatted section to the codebook PDF. The content is rendered
-        with markdown support, allowing for rich text formatting.
-
-        The section includes:
-        - A section header "Project Overview: Summary of Project Details"
-        - Content from the projectoverview markdown file
-        - Proper font formatting (Times 12pt)
-        - Markdown rendering support
-        - Automatic page break after the section
-
+        Add a markdown file as a formatted section to the PDF document.
+        
         Args:
-            pdf (Any): The PDF object to add the project overview section to.
-                Should be an instance of the PDF class with FPDF2 functionality
-                including start_section(), multi_cell(), and markdown support.
-
-        Returns:
-            None: This method modifies the PDF document in-place.
-
-        Raises:
-            FileNotFoundError: If the projectoverview file path doesn't exist.
-            UnicodeDecodeError: If the projectoverview file cannot be decoded as latin-1.
-
-        Note:
-            - The projectoverview file should be in markdown format for best results
-            - Content is decoded using 'latin-1' encoding for broad compatibility
-            - A new page is automatically added after the project overview section
-            - The projectoverview file path is specified in self.projectoverview during initialization
+            pdf: The PDF object to add the section to
+            section_title: Title for the section header
+            file_path: Path to the markdown file to read
+            add_page_break: Whether to add a page break after the section
         """
-        pdf.start_section("Project Overview: Summary of Project Details")
+        pdf.start_section(section_title)
         pdf.ln()
 
         try:
-            with open(self.projectoverview, "rb") as fh:
+            with open(file_path, "rb") as fh:
                 txt = fh.read().decode("latin-1")
         except FileNotFoundError:
-            raise FileNotFoundError(f"Project overview file not found: {self.projectoverview}")
+            raise FileNotFoundError(f"Markdown file not found: {file_path}")
         except UnicodeDecodeError as e:
             raise UnicodeDecodeError(
                 e.encoding, e.object, e.start, e.end,
-                f"Cannot decode project overview file as latin-1: {self.projectoverview}"
+                f"Cannot decode markdown file as latin-1: {file_path}"
             )
 
         pdf.set_font("Times", size=12)
         line_height = pdf.font_size
         pdf.multi_cell(w=pdf.epw, h=line_height,
-                       text=txt, new_x="LEFT", new_y="NEXT",
-                       max_line_height=line_height*2,
-                       align='L', markdown=True)
-
-        pdf.add_page()
+                    text=txt, new_x="LEFT", new_y="NEXT",
+                    max_line_height=line_height*2,
+                    align='L', markdown=True)
+        
+        if add_page_break:
+            pdf.add_page()
 
     def create_data_dictionary_table(self) -> pd.DataFrame:
         """
@@ -361,69 +337,6 @@ class codebook():
             cell_width=[30, 20, 14, 25, pdf.epw - (30 + 20 + 14 + 25)]
         )
         pdf.add_page()
-
-
-    def add_keyterms(self, pdf: Any) -> None:
-        """
-        Add a Key Terms and Definitions section to the PDF document.
-        
-        Key terms provide essential definitions that ensure future data users
-        do not have to assume what terms mean, promoting clear understanding
-        and consistent interpretation of the dataset and its documentation.
-        
-        This method reads a markdown file containing key terms and definitions
-        and adds it as a formatted section to the codebook. The content is 
-        rendered with markdown support, allowing for rich text formatting
-        including bold, italic, and other markdown features.
-        
-        The section includes:
-        - A section header "Key Terms and Definitions"
-        - Content from the keyterms markdown file
-        - Proper font formatting (Times 12pt)
-        - Markdown rendering support
-        - Automatic page break after the section
-        
-        Args:
-            pdf (Any): The PDF object to add the key terms section to.
-                Should be an instance of the PDF class with FPDF2 functionality
-                including start_section(), multi_cell(), and markdown support.
-        
-        Returns:
-            None: This method modifies the PDF document in-place.
-            
-        Raises:
-            FileNotFoundError: If the keyterms file path doesn't exist.
-            UnicodeDecodeError: If the keyterms file cannot be decoded as latin-1.
-            
-        Note:
-            - The keyterms file should be in markdown format for best results
-            - Content is decoded using 'latin-1' encoding for broad compatibility
-            - A new page is automatically added after the key terms section
-            - The keyterms file path is specified in self.keyterms during initialization
-        """
-        # Add Key Terms and Definitions
-        pdf.start_section("Key Terms and Definitions")
-        pdf.ln()
-
-        try:
-            with open(self.keyterms, "rb") as fh:
-                txt = fh.read().decode("latin-1")
-        except FileNotFoundError:
-            raise FileNotFoundError(f"Key terms file not found: {self.keyterms}")
-        except UnicodeDecodeError as e:
-            raise UnicodeDecodeError(
-                e.encoding, e.object, e.start, e.end,
-                f"Cannot decode key terms file as latin-1: {self.keyterms}"
-            )
-        
-        pdf.set_font("Times", size=12)
-        line_height = pdf.font_size
-        pdf.multi_cell(w=pdf.epw, h = line_height,
-                    text = txt,
-                    new_x = XPos.LEFT,
-                    new_y = YPos.NEXT,
-                    max_line_height=line_height*2,
-                    align='L', markdown=True)  
 
     def add_figures(self, pdf: Any) -> None:
         """
@@ -1089,7 +1002,12 @@ class codebook():
 
         # Add Project Overview
         if self.projectoverview != '':
-            self.add_projectoverview(pdf)
+            self._add_markdown_section(
+                pdf, 
+                "Project Overview: Summary of Project Details", 
+                self.projectoverview,
+                add_page_break=True
+            )
 
         # Add Data Dictionary
         self.add_datadictionary(pdf)
@@ -1103,7 +1021,50 @@ class codebook():
 
         # Add Key Terms and Definitions
         if self.keyterms != '':
-            self.add_keyterms(pdf)
+            self._add_markdown_section(
+                pdf,
+                "Key Terms and Definitions", 
+                self.keyterms,
+                add_page_break=False
+            )
+
+        # Add instructions for adding missing sections
+        if hasattr(self, 'instruction_mode') and self.instruction_mode:
+            # Get the directory where this module is located for instruction files
+            module_dir = os.path.dirname(os.path.abspath(__file__))
+            
+            # Add project overview instructions if missing
+            if self.projectoverview == '':
+                project_instructions_path = os.path.join(module_dir, 'pdfcb_00c_projectoverview_instructions.md')
+                if os.path.exists(project_instructions_path):
+                    self._add_markdown_section(
+                        pdf,
+                        "Instructions for Adding Project Overview", 
+                        project_instructions_path,
+                        add_page_break=True
+                    )
+            
+            # Add data structure instructions if auto-generated
+            if self._auto_generated_structure:
+                datastructure_instructions_path = os.path.join(module_dir, 'pdfcb_00d_datastructure_instructions.md')
+                if os.path.exists(datastructure_instructions_path):
+                    self._add_markdown_section(
+                        pdf,
+                        "Instructions for Adding Data Structure File", 
+                        datastructure_instructions_path,
+                        add_page_break=True
+                    )
+                    
+            # Add key terms instructions if missing
+            if self.keyterms == '':
+                keyterms_instructions_path = os.path.join(module_dir, 'pdfcb_00b_keyterms_instructions.md')
+                if os.path.exists(keyterms_instructions_path):
+                    self._add_markdown_section(
+                        pdf,
+                        "Instructions for Adding Key Terms and Definitions", 
+                        keyterms_instructions_path,
+                        add_page_break=False
+                    )
 
 
         # Save codebook
