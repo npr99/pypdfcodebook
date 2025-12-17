@@ -10,7 +10,8 @@
 import csv
 import os
 from fpdf import FPDF, XPos, YPos
-from typing import List, Union, Any, Optional
+from typing import List, Union, Any, Optional, Tuple
+from PIL import Image
 
 """
 Help to make Codebook PDF
@@ -54,6 +55,55 @@ class PDF(FPDF):
         self.header_text = header_text
         self.footer_text = footer_text
         self.footer_image_path = footer_image_path
+        
+    def calculate_footer_image_size(self, image_path: str, max_height: float = 15.0) -> Tuple[Optional[float], Optional[float]]:
+        """
+        Calculate appropriate width and height for footer image to fit within constraints.
+        
+        This function determines the optimal size for a footer image by:
+        1. Getting the actual image dimensions
+        2. Calculating scaling factor to fit within max height and page width
+        3. Maintaining the original aspect ratio
+        
+        Args:
+            image_path (str): Path to the image file
+            max_height (float): Maximum height in mm for the footer image. Defaults to 15.0mm.
+            
+        Returns:
+            Tuple[Optional[float], Optional[float]]: (width, height) in mm, or (None, None) if error
+            
+        Note:
+            - Returns (None, None) if image cannot be processed
+            - Image is scaled proportionally to maintain aspect ratio
+            - Will not exceed max_height or effective page width (self.epw)
+        """
+        try:
+            # Open image and get dimensions
+            with Image.open(image_path) as img:
+                img_width_px, img_height_px = img.size
+                
+            # Convert pixels to mm (assuming 96 DPI)
+            # 1 inch = 25.4 mm, so 1 pixel = 25.4/96 mm
+            px_to_mm = 25.4 / 96
+            img_width_mm = img_width_px * px_to_mm
+            img_height_mm = img_height_px * px_to_mm
+            
+            # Calculate scaling factors for both dimensions
+            width_scale = self.epw / img_width_mm
+            height_scale = max_height / img_height_mm
+            
+            # Use the smaller scale factor to ensure image fits in both dimensions
+            scale_factor = min(width_scale, height_scale, 1.0)  # Don't scale up
+            
+            # Calculate final dimensions
+            final_width = img_width_mm * scale_factor
+            final_height = img_height_mm * scale_factor
+            
+            return final_width, final_height
+            
+        except Exception as e:
+            print(f"Warning: Could not calculate image dimensions for {image_path}: {str(e)}")
+            return None, None
         
     def header(self) -> None:
         """
@@ -104,7 +154,23 @@ class PDF(FPDF):
         # Add image if available and valid
         if self.footer_image_path and os.path.exists(str(self.footer_image_path)):
             try:
-                self.image(name=str(self.footer_image_path), w=self.epw, x=15, y=self.eph+10)
+                # Calculate appropriate image size
+                img_width, img_height = self.calculate_footer_image_size(str(self.footer_image_path))
+                
+                if img_width and img_height:
+                    # Position image at left margin
+                    x_position = 15  # Left margin
+                    # Position image at bottom of page with some margin
+                    y_position = self.h - img_height - 5  # 5mm margin from bottom
+                    
+                    self.image(name=str(self.footer_image_path), 
+                             w=img_width, 
+                             h=img_height,
+                             x=x_position, 
+                             y=y_position)
+                else:
+                    print(f"Warning: Could not determine size for image {self.footer_image_path}")
+                    
             except Exception as e:
                 print(f"Warning: Could not render image {self.footer_image_path}: {str(e)}")
 
