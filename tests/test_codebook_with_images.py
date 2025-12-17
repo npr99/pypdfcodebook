@@ -12,7 +12,7 @@ def test_codebook_with_images(tmp_path):
     keyterms_path = os.path.join(sample_dir,        'pdfcb_00b_keyterms.md')
     csv_path = os.path.join(sample_dir,             'pdfcb_00c_sampledata.csv')
     datastructure_path = os.path.join(sample_dir,   'pdfcb_00d_data_structure.py')
-    footer_image_path = os.path.join(sample_dir, 'IN-CORE_HRRC_Banner.png')
+    footer_image_path = os.path.join(sample_dir, 'pdfcb_00f_pypdfcodebooklogo_2025-12-17.png')
     figure_path = os.path.join(sample_dir, 'pdfcb_00e_sampleimage.jpg')
 
     # Check if paths exist, else set to empty string

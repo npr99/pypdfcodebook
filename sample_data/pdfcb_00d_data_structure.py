@@ -1,63 +1,79 @@
 """
-Data Structure for Housing Unit Allocation
+Data Structure for Generic Survey Response Data
 
 pyType = Python Type - needed to set correct data type in Python
 
 """
 
 DATA_STRUCTURE = {
-    'huid'  : 
-    {   'label' : 'Housing Unit ID', 
+    'rid'  : 
+    {   'label' : 'Random Survey Response ID', 
         'DataType'  : 'String',
         'pyType' : str,
-        'AnalysisUnit' : 'Housing unit',
-        'MeasureUnit' : 'Housing units',
+        'AnalysisUnit' : 'Survey response',
+        'MeasureUnit' : 'Responses',
         'notes' : '\n'.join([
-            '1. Primary Key for sample data. '
+            '1. Unique, non-missing key for sample data. \n \n'
+            '2. Randomly generated 5 digit alphanumeric string identifier. \n \n'
+            '3. Range from A1000 to Z9999.'
                 ])},
-    'blockid' : 
-    {   'label' : 'Block ID' , 
-        'huiv3-0-0' : 'Block2010',
-        'formula' : "\n".join([
-                        "output_df['blockid']."
-                        "apply(lambda x :"
-                        "str(int(x)).zfill(15))"]),
-        'DataType'  : 'String',
-        'pyType' : str,
-        'AnalysisUnit' : 'Geographic unit',
-        'MeasureUnit' : 'Housing unit in census block',
-        'length' : 15,
-        'zero_padded' : True,
-        'notes' :
-            '1. 2010 Census Block ID'},
-    'numprec' : 
-    {   'label' : 'Number of Person Records',
-        'DataType'  : 'Int',
-        'pyType' : int,
-        'AnalysisUnit' : 'Housing unit',
-        'MeasureUnit' : 'Persons'},
-    'ownershp' : 
-    {   'label' : 'Tenure Status',
+    'region' : 
+    {   'label' : 'Geographic Region',
         'DataType'  : 'Int',
         'pyType' : "category",
         'categorical' : True,
-        'AnalysisUnit' : 'Household',
-        'MeasureUnit' : 'Housing unit',
+        'AnalysisUnit' : 'Survey response',
+        'MeasureUnit' : 'Responses by Region',
         'categories_dict' : {
-            1 : '1. Owned or being bought (loan)',
-            2 : '2. Rented'},
+            1 : '1. North',
+            2 : '2. South', 
+            3 : '3. East',
+            4 : '4. West'},
         'categories' : 
-        [   '1. Owned or being bought (loan)',
-            '2. Rented'],
+        [   '1. North',
+            '2. South',
+            '3. East', 
+            '4. West'],
+        'primary_key' : 'rid',
+        'pop_var' : 'weight'},
+    'satscore' : 
+    {   'label' : 'Satisfaction Rating',
+        'DataType'  : 'Int',
+        'pyType' : "category",
+        'categorical' : True,
+        'AnalysisUnit' : 'Survey response',
+        'MeasureUnit' : 'Satisfaction Level',
+        'categories_dict' : {
+            1 : '1. Very Dissatisfied',
+            2 : '2. Dissatisfied',
+            3 : '3. Neutral',
+            4 : '4. Satisfied',
+            5 : '5. Very Satisfied'},
+        'categories' : 
+        [   '1. Very Dissatisfied',
+            '2. Dissatisfied',
+            '3. Neutral',
+            '4. Satisfied',
+            '5. Very Satisfied'],
         'notes' : '\n'.join([
-            '1. Based on 2010 Census SF1 Table H16. \n \n'
-            '2. Tenure status is not applicable for vacant not occupied housing units. \n \n'
-            '3. Tenure status is not applicable for group quarters. \n \n'
-            '4. To verify results compare table to: \n \n'
-            'https://data.census.gov/cedsci/table?g=0500000US37156&tid=DECENNIALSF12010.H16.'
+            '1. Five-point Likert scale measuring overall satisfaction. \n \n'
+            '2. Missing values indicate participant did not respond to this question.'
                 ]),
-        'primary_key' : 'huid',
-        'pop_var' : 'numprec'},
+        'primary_key' : 'rid',
+        'pop_var' : 'weight'},
+    'weight' : 
+    {   'label' : 'Survey Weight',
+        'DataType'  : 'Float',
+        'pyType' : float,
+        'AnalysisUnit' : 'Survey response',
+        'MeasureUnit' : 'Population',
+        'notes' : '\n'.join([
+            '1. Statistical weight for population inference and representative results. \n \n'
+            '2. Used to adjust for sampling bias and ensure results reflect target population. \n \n'
+            '3. Based on sample design for each region. \n \n'
+            '4. Region 1 weight = 2.0, Region 2 weight = 1.0, Region 3 weight = 0.5, Region 4 weight = 2.0. \n \n'
+            '5. Region 1 and 4 are under sampled regions. Region 3 is over sampled.'
+                ])},
 }
 
 # Add additional columns as needed following this structure.
