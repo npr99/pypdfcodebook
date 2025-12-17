@@ -72,8 +72,22 @@ DATA_STRUCTURE = {
             '2. Used to adjust for sampling bias and ensure results reflect target population. \n \n'
             '3. Based on sample design for each region. \n \n'
             '4. Region 1 weight = 2.0, Region 2 weight = 1.0, Region 3 weight = 0.5, Region 4 weight = 2.0. \n \n'
-            '5. Region 1 and 4 are under sampled regions. Region 3 is over sampled.'
+            '5. Regions 1 and 4 are under sampled regions. Region 3 is over sampled.'
                 ])},
+    'age' : 
+    {   'label' : 'Age in Years',
+        'DataType'  : 'Int',
+        'pyType' : int,
+        'AnalysisUnit' : 'Survey response',
+        'MeasureUnit' : 'Years',
+        'notes' : '\n'.join([
+            '1. Age of survey respondent at time of survey. \n \n'
+            '2. Range from 18 to 99 years. \n \n'
+            '3. Missing values indicate participant did not provide age information.'
+            '4. Surveys completed between November 2025 and December 2025.'
+                ]),
+        'primary_key' : 'rid',
+        'pop_var' : 'weight'},
 }
 
 # Add additional columns as needed following this structure.

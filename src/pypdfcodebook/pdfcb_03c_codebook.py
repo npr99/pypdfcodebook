@@ -627,28 +627,28 @@ class codebook():
             pop_table = output_df[[pop_var,variable]].groupby(by=variable).sum()
             pop_table.reset_index(inplace=True)
             # Rename columns
-            pop_table = pop_table.rename(columns={pop_var:'Sum of '+label_col,
+            pop_table = pop_table.rename(columns={pop_var:'Weighted Sum',
                                         variable : 'Code'})
 
             # Add percent column
-            pop_table['Percent '+label_col] = \
-                pop_table['Sum of '+label_col]/pop_table['Sum of '+label_col].sum()
+            pop_table['Weighted Percent'] = \
+                pop_table['Weighted Sum']/pop_table['Weighted Sum'].sum()
 
             # Format columns
-            pop_table['Sum of '+label_col] = \
-                pop_table['Sum of '+label_col].apply(lambda x: "{:,}".format(x))
-            pop_table['Percent '+label_col]  = \
-                pop_table['Percent '+label_col] .apply(lambda x: "{:.2%}".format(x))
+            pop_table['Weighted Sum'] = \
+                pop_table['Weighted Sum'].apply(lambda x: "{:,}".format(x))
+            pop_table['Weighted Percent']  = \
+                pop_table['Weighted Percent'].apply(lambda x: "{:.2%}".format(x))
 
             # Merge count and categories tables
             categorical_table = \
                 categorical_table.merge(pop_table, on='Code', how='outer')
 
             # Fill in missing values
-            categorical_table['Sum of '+label_col] = \
-                categorical_table['Sum of '+label_col].fillna(value='0')
-            categorical_table['Percent '+label_col] = \
-                categorical_table['Percent '+label_col].fillna(value='0.00%')
+            categorical_table['Weighted Sum'] = \
+                categorical_table['Weighted Sum'].fillna(value='0')
+            categorical_table['Weighted Percent'] = \
+                categorical_table['Weighted Percent'].fillna(value='0.00%')
 
         return categorical_table
 
