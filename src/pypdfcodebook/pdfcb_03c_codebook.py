@@ -39,7 +39,8 @@ class codebook():
             outputfolder: str = "",
             seed: int = 15151,
             figures: Optional[Any] = None,
-            footer_image_path: str = "") -> None:
+            footer_image_path: str = "",
+            instruction_mode: bool = True) -> None:
         """
         Initialize a codebook generator for creating PDF documentation of datasets.
         
@@ -82,7 +83,16 @@ class codebook():
 
         self.input_df = input_df
         self.header_title = header_title
-        self.datastructure = datastructure
+        
+        # Generate default data structure if none provided
+        if not datastructure:
+            print("Warning: No datastructure provided. Generating default structure from DataFrame.")
+            self.datastructure = self._generate_default_datastructure()
+            self._auto_generated_structure = True
+        else:
+            self.datastructure = datastructure
+            self._auto_generated_structure = False
+            
         self.projectoverview = projectoverview
         self.keyterms = keyterms
         self.output_filename = output_filename
@@ -91,6 +101,56 @@ class codebook():
         self.seed = seed
         self.figures = figures
         self.footer_image_path = footer_image_path
+
+    def _generate_default_datastructure(self) -> Dict[str, Dict[str, Any]]:
+        """
+        Generate a default data structure by analyzing the DataFrame columns.
+        
+        This method automatically creates a basic data structure when none is provided,
+        analyzing each column's data type and creating reasonable defaults for metadata.
+        
+        Returns:
+            Dict[str, Dict[str, Any]]: Generated data structure with default values.
+            
+        Note:
+            - DataType is inferred from pandas dtypes
+            - Most metadata fields are set to "Unknown" as placeholders
+            - A note is added indicating auto-generation
+        """
+        datastructure = {}
+        
+        for column in self.input_df.columns:
+            dtype = str(self.input_df[column].dtype)
+            
+            # Determine DataType and pyType based on pandas dtype - no categorical detection
+            if 'int' in dtype.lower():
+                data_type = 'Int'
+                py_type = 'int'
+            elif 'float' in dtype.lower():
+                data_type = 'Float' 
+                py_type = 'float'
+            elif 'bool' in dtype.lower():
+                data_type = 'String'
+                py_type = 'object'
+            elif 'datetime' in dtype.lower():
+                data_type = 'String'
+                py_type = 'object'
+            else:  # object, string, etc.
+                data_type = 'String'
+                py_type = 'object'
+            
+            # Create default structure for this variable
+            datastructure[column] = {
+                'DataType': data_type,
+                'label': 'Variable Label Missing',  # Do not assume labels from column names
+                'pyType': py_type,
+                'AnalysisUnit': 'Unknown',
+                'MeasureUnit': 'Unknown',
+                'notes': '**WARNING**: Auto-generated data structure - please review and update metadata as needed.'
+            }
+        
+        return datastructure
+
 
     def render_toc(self, pdf: Any, outline: List[Any]) -> None:
         """
@@ -279,6 +339,19 @@ class codebook():
         table_data = [styled_table.columns.tolist()] + styled_table.values.tolist()
         pdf.start_section("Data Dictionary: Summary of Variables")
         pdf.ln()
+        
+        # Add note if data structure was auto-generated
+        if self._auto_generated_structure:
+            pdf.set_font("helvetica", style="I", size=10)
+            note_text = (
+                "Note: Data structure was automatically generated from DataFrame analysis. "
+                "Variable metadata may need review and updating for accuracy."
+            )
+            pdf.multi_cell(w=pdf.epw, h=pdf.font_size*1.5, text=note_text, 
+                          new_x="LEFT", new_y="NEXT", align='L')
+            pdf.ln()
+            pdf.set_font("helvetica", size=12)  # Reset font
+        
         pdf.create_table(
             table_data=table_data,
             title='',
@@ -1031,6 +1104,7 @@ class codebook():
         # Add Key Terms and Definitions
         if self.keyterms != '':
             self.add_keyterms(pdf)
+
 
         # Save codebook
         codebook_filepath = os.path.join(self.outputfolder, self.output_filename + '.pdf')
