@@ -5,6 +5,12 @@
 * Author/Maintainer: Nathanael Rosenheim                                     *
 * Copyright (c) 2025 Nathanael Rosenheim                                     *
 ******************************************************************************
+
+Code originally developed by Nathanael Rosenheim
+Updates after December 2025 made with assistance from Claude Sonnet 4 LLM
+in VS Code Agent Mode.
+
+Date Last Modified: December 17, 2025
 """
 
 import csv
