@@ -45,23 +45,9 @@ def test_codebook_with_images(tmp_path):
     footer_image_path = footer_image_path if os.path.exists(footer_image_path) else ""
     # Keep figure_list_paths as is - individual validation happens later
 
-    # Load CSV
-    input_df = pd.read_csv(csv_path)
-
-    # Load data structure dict from .py file
-    spec = importlib.util.spec_from_file_location("pdfcb_00d_data_structure", datastructure_path)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"Could not load module from {datastructure_path}")
-    ds_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(ds_module)
-    datastructure = ds_module.DATA_STRUCTURE
-
-
-    # Output folder
-    output_filename = "test_codebook_with_images"
+    # Output folder setup
     output_folder = os.path.abspath("./tests/example_codebooks")
     os.makedirs(output_folder, exist_ok=True)
-    output_filename_path = os.path.join(output_folder, f"{output_filename}.pdf")
 
     # Validate image formats and process figure list
     supported_exts = {'.png', '.jpg', '.jpeg', '.bmp', '.gif', '.tif', '.tiff'}
@@ -98,20 +84,63 @@ def test_codebook_with_images(tmp_path):
             print(f"  {i}. {os.path.basename(fig)}")
     print()
 
-    # Pass figures as a list if valid, else None
+    # Load CSV
+    input_df = pd.read_csv(csv_path)
+
+    # Test both methods of providing data structure
+    
+    # Method 1: Using datastructure_path (new approach)
+    print("Testing Method 1: Using datastructure_path parameter...")
+    output_filename_method1 = "test_codebook_with_images_method1"
+    output_filename_path_method1 = os.path.join(output_folder, f"{output_filename_method1}.pdf")
+    
     figures_param = figures_to_use if figures_to_use else None
-    pdfcodebook = codebook(
+    pdfcodebook_method1 = codebook(
         input_df=input_df,
-        header_title='Regional Satisfaction Survey Codebook',
-        datastructure=datastructure,
+        header_title='Regional Satisfaction Survey Codebook (Method 1)',
+        datastructure_path=datastructure_path,  # New parameter
         projectoverview=projectoverview_path,
         keyterms=keyterms_path,
-        output_filename=output_filename,
+        output_filename=output_filename_method1,
         outputfolder=output_folder,
         figures=figures_param,
         footer_image_path=footer_image_path_to_use
     )
-    pdfcodebook.create_codebook()
+    pdfcodebook_method1.create_codebook()
+    
+    # Assert Method 1 output file was created
+    assert os.path.exists(output_filename_path_method1)
+    print(f"Method 1 completed: {output_filename_path_method1}")
+    
+    # Method 2: Loading datastructure manually (original approach)
+    print("\nTesting Method 2: Using datastructure dictionary parameter...")
+    
+    # Load data structure dict from .py file manually
+    spec = importlib.util.spec_from_file_location("pdfcb_00d_data_structure", datastructure_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Could not load module from {datastructure_path}")
+    ds_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(ds_module)
+    datastructure = ds_module.DATA_STRUCTURE
 
-    # Assert output file was created
-    assert os.path.exists(output_filename_path)
+    output_filename_method2 = "test_codebook_with_images_method2"
+    output_filename_path_method2 = os.path.join(output_folder, f"{output_filename_method2}.pdf")
+
+    pdfcodebook_method2 = codebook(
+        input_df=input_df,
+        header_title='Regional Satisfaction Survey Codebook (Method 2)',
+        datastructure=datastructure,  # Original parameter
+        projectoverview=projectoverview_path,
+        keyterms=keyterms_path,
+        output_filename=output_filename_method2,
+        outputfolder=output_folder,
+        figures=figures_param,
+        footer_image_path=footer_image_path_to_use
+    )
+    pdfcodebook_method2.create_codebook()
+
+    # Assert Method 2 output file was created
+    assert os.path.exists(output_filename_path_method2)
+    print(f"Method 2 completed: {output_filename_path_method2}")
+    
+    print("\nBoth methods completed successfully!")

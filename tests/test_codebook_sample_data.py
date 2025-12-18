@@ -27,16 +27,6 @@ def test_codebook_with_sample_data(tmp_path):
     # Load CSV
     input_df = pd.read_csv(csv_path)
 
-    # Load data structure dict from .py file
-    spec = importlib.util.spec_from_file_location("pdfcb_00d_data_structure", datastructure_path)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"Could not load module from {datastructure_path}")
-    ds_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(ds_module)
-    datastructure = ds_module.DATA_STRUCTURE
-
-    # Set up output in tests directory
-    tests_dir = os.path.dirname(__file__)
     output_filename = "test_sample_data"  # Just the name without extension
     
     # Output folder
@@ -49,7 +39,7 @@ def test_codebook_with_sample_data(tmp_path):
     pdfcodebook = codebook(
         input_df=input_df,
         header_title='Test pyPDFCodebook',
-        datastructure=datastructure,
+        datastructure_path=datastructure_path,
         projectoverview=projectoverview_path,
         keyterms=keyterms_path,
         output_filename=output_filename,
