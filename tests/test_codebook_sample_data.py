@@ -16,32 +16,29 @@ import pandas as pd
 import importlib.util
 from src.pypdfcodebook.pdfcb_03c_codebook import codebook
 
-def test_codebook_with_sample_data(tmp_path):
-    # Paths to sample files
+def test_codebook_with_sample_data():
+    # Sample data directory
     sample_dir = os.path.join(os.path.dirname(__file__), '..', 'sample_data')
-    projectoverview_path = os.path.join(sample_dir, 'pdfcb_00a_projectoverview.md')
-    keyterms_path = os.path.join(sample_dir,        'pdfcb_00b_keyterms.md')
-    csv_path = os.path.join(sample_dir,             'pdfcb_00c_sampledata.csv')
-    datastructure_path = os.path.join(sample_dir,   'pdfcb_00d_data_structure.py')
-
-    # Load CSV
-    input_df = pd.read_csv(csv_path)
-
-    output_filename = "test_sample_data"  # Just the name without extension
     
-    # Output folder
-    output_folder = os.path.abspath("./tests/example_codebooks")
-    os.makedirs(output_folder, exist_ok=True)
+    # Define filenames - codebook class handles path building
+    projectoverview_filename = 'pdfcb_00a_projectoverview.md'
+    keyterms_filename = 'pdfcb_00b_keyterms.md'
+    csv_filename = 'pdfcb_00c_sampledata.csv'
+    datastructure_filename = 'pdfcb_00d_data_structure.py'
+
+    output_filename = "test_sample_data"
+    output_folder = "./tests/example_codebooks"
     output_filename_path = os.path.join(output_folder, f"{output_filename}.pdf")
 
 
-    # Create codebook
+    # Create codebook with new simplified API
     pdfcodebook = codebook(
-        input_df=input_df,
+        input_csv_filename=csv_filename,  # Use CSV filename instead of loading manually
         header_title='Test pyPDFCodebook',
-        datastructure_path=datastructure_path,
-        projectoverview=projectoverview_path,
-        keyterms=keyterms_path,
+        input_dir=sample_dir,  # One directory for all input files
+        datastructure_filename=datastructure_filename,
+        projectoverview_filename=projectoverview_filename,
+        keyterms_filename=keyterms_filename,
         output_filename=output_filename,
         outputfolder=output_folder
     )

@@ -66,9 +66,8 @@ def test_codebook_no_keyterms_projectoverview():
         },
     }
 
-    # Output folder setup (for explicit folder test)
-    output_folder = os.path.abspath("./tests/example_codebooks")
-    os.makedirs(output_folder, exist_ok=True)
+    # Output folder setup
+    output_folder = "./tests/example_codebooks"
 
     # Create codebook instance with no keyterms or projectoverview
     # Output folder is now optional - this will save to current directory
@@ -76,10 +75,7 @@ def test_codebook_no_keyterms_projectoverview():
         input_df=df,
         header_title="Sample Codebook v2 (Current Dir)",
         datastructure=datastructure,
-        projectoverview="",  # Not provided
-        keyterms="",         # Not provided
         output_filename="test_codebook_v2_current_dir"
-        # outputfolders parameter omitted - will use current directory
     )
     cb.create_codebook()
     
@@ -88,17 +84,22 @@ def test_codebook_no_keyterms_projectoverview():
         input_df=df,
         header_title="Sample Codebook v2 (Explicit Dir)",
         datastructure=datastructure,
-        projectoverview="",  # Not provided
-        keyterms="",         # Not provided
         output_filename="test_codebook_v2_explicit_dir",
         outputfolder=output_folder
     )
     cb_explicit.create_codebook()
     
-    print("Codebook PDF (current dir) generated at:", os.path.join(os.getcwd(), "test_codebook_v2_current_dir.pdf"))
-    print("Codebook PDF (explicit dir) generated at:", os.path.join(output_folder, "test_codebook_v2_explicit_dir.pdf"))
+    # Assert files were created
+    current_dir_file = os.path.join(os.getcwd(), "test_codebook_v2_current_dir.pdf")
+    explicit_dir_file = os.path.join(output_folder, "test_codebook_v2_explicit_dir.pdf")
+    
+    assert os.path.exists(current_dir_file), f"Current dir PDF not created: {current_dir_file}"
+    assert os.path.exists(explicit_dir_file), f"Explicit dir PDF not created: {explicit_dir_file}"
+    
+    print(f"✓ Codebook PDF (current dir) generated: {current_dir_file}")
+    print(f"✓ Codebook PDF (explicit dir) generated: {explicit_dir_file}")
 
-    # delete generated file in current working directory
-    os.remove(os.path.join(os.getcwd(), "test_codebook_v2_current_dir.pdf"))
+    # Clean up generated file in current working directory
+    os.remove(current_dir_file)
 if __name__ == "__main__":
     test_codebook_no_keyterms_projectoverview()

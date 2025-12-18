@@ -42,9 +42,6 @@ def test_auto_generated_datastructure():
     cb = codebook(
         input_df=df,
         header_title="Auto-Generated Structure Test",
-        # datastructure={},  # Commented out - let it auto-generate
-        projectoverview="",
-        keyterms="",
         output_filename="test_auto_generated_structure"
     )
     
