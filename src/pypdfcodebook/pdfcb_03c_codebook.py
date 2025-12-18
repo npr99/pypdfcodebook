@@ -18,6 +18,7 @@ import numpy as np
 import csv
 import os
 import random
+import importlib.util
 from datetime import datetime
 from fpdf import FPDF, TextStyle, XPos, YPos
 from typing import Dict, List, Union, Optional, Any
@@ -33,6 +34,7 @@ class codebook():
             input_df: pd.DataFrame,
             header_title: str = "Data Codebook",
             datastructure: Dict[str, Dict[str, Any]] = {},
+            datastructure_path: str = "",
             projectoverview: str = "",
             keyterms: str = "",
             output_filename: str = "pypdfcodebook",
@@ -56,6 +58,9 @@ class codebook():
                 variable characteristics. Each key is a variable name, values are
                 dictionaries with 'DataType', 'length', 'categorical', 'label',
                 'AnalysisUnit', 'MeasureUnit' etc.
+            datastructure_path (str, optional): Path to Python file containing
+                DATA_STRUCTURE dictionary. If provided, takes precedence over
+                datastructure parameter. Defaults to empty string.
             projectoverview (str): Path to markdown file containing project description.
             keyterms (str): Path to markdown file containing key terms and definitions.
             output_filename (str): Base filename for generated PDF (without extension).
@@ -84,14 +89,23 @@ class codebook():
         self.input_df = input_df
         self.header_title = header_title
         
-        # Generate default data structure if none provided
-        if not datastructure:
+        # Load data structure from file path if provided, otherwise use dict or auto-generate
+        if datastructure_path:
+            try:
+                self.datastructure = self._load_datastructure_from_file(datastructure_path)
+                self._auto_generated_structure = False
+            except Exception as e:
+                print(f"Error loading datastructure from {datastructure_path}: {e}")
+                print("Falling back to auto-generation.")
+                self.datastructure = self._generate_default_datastructure()
+                self._auto_generated_structure = True
+        elif datastructure:
+            self.datastructure = datastructure
+            self._auto_generated_structure = False
+        else:
             print("Warning: No datastructure provided. Generating default structure from DataFrame.")
             self.datastructure = self._generate_default_datastructure()
             self._auto_generated_structure = True
-        else:
-            self.datastructure = datastructure
-            self._auto_generated_structure = False
             
         self.projectoverview = projectoverview
         self.keyterms = keyterms
@@ -102,6 +116,43 @@ class codebook():
         self.figures = figures
         self.footer_image_path = footer_image_path
         self.instruction_mode = instruction_mode
+
+    def _load_datastructure_from_file(self, datastructure_path: str) -> Dict[str, Dict[str, Any]]:
+        """
+        Load data structure dictionary from a Python file.
+        
+        This method loads a DATA_STRUCTURE dictionary from a Python file,
+        allowing users to define their data structure in a separate file
+        for better organization and reusability.
+        
+        Args:
+            datastructure_path (str): Path to Python file containing DATA_STRUCTURE dictionary.
+            
+        Returns:
+            Dict[str, Dict[str, Any]]: The loaded data structure dictionary.
+            
+        Raises:
+            ImportError: If the file cannot be loaded or doesn't contain DATA_STRUCTURE.
+            FileNotFoundError: If the specified file doesn't exist.
+            
+        Note:
+            - The Python file must contain a variable named DATA_STRUCTURE
+            - The file should follow the standard data structure format
+        """
+        if not os.path.exists(datastructure_path):
+            raise FileNotFoundError(f"Data structure file not found: {datastructure_path}")
+            
+        # Load data structure dict from .py file
+        spec = importlib.util.spec_from_file_location("data_structure_module", datastructure_path)
+        if spec is None or spec.loader is None:
+            raise ImportError(f"Could not load module from {datastructure_path}")
+        ds_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(ds_module)
+        
+        if not hasattr(ds_module, 'DATA_STRUCTURE'):
+            raise ImportError(f"No DATA_STRUCTURE found in {datastructure_path}")
+            
+        return ds_module.DATA_STRUCTURE
 
     def _generate_default_datastructure(self) -> Dict[str, Dict[str, Any]]:
         """
