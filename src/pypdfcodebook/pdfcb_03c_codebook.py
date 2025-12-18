@@ -31,17 +31,19 @@ class codebook():
     Functions to create a pdf codebook for data
     """ 
     def __init__(self,
-            input_df: pd.DataFrame,
+            input_df: Optional[pd.DataFrame] = None,
+            input_csv_filename: str = "",
             header_title: str = "Data Codebook",
+            input_dir: str = "",
             datastructure: Dict[str, Dict[str, Any]] = {},
-            datastructure_path: str = "",
-            projectoverview: str = "",
-            keyterms: str = "",
+            datastructure_filename: str = "",
+            projectoverview_filename: str = "",
+            keyterms_filename: str = "",
+            figure_filenames: Optional[List[str]] = None,
+            footer_image_filename: str = "",
             output_filename: str = "pypdfcodebook",
             outputfolder: str = "",
             seed: int = 15151,
-            figures: Optional[Any] = None,
-            footer_image_path: str = "",
             instruction_mode: bool = True) -> None:
         """
         Initialize a codebook generator for creating PDF documentation of datasets.
@@ -51,29 +53,39 @@ class codebook():
         generates professional PDF documentation with customizable formatting.
         
         Args:
-            input_df (pd.DataFrame): The dataset to create a codebook for.
+            input_df (Optional[pd.DataFrame]): The dataset to create a codebook for.
+                If not provided, input_csv_filename must be specified.
+            input_csv_filename (str, optional): Filename of CSV file to load as dataset.
+                Will be joined with input_dir if provided. Takes precedence over input_df
+                if both are provided. Defaults to empty string.
             header_title (str, optional): Main title to appear in PDF headers.
                 Defaults to "Data Codebook".
+            input_dir (str, optional): Directory containing input files. If provided,
+                filenames will be joined with this directory. Defaults to empty string.
             datastructure (Dict[str, Dict[str, Any]]): Metadata dictionary defining
                 variable characteristics. Each key is a variable name, values are
                 dictionaries with 'DataType', 'length', 'categorical', 'label',
                 'AnalysisUnit', 'MeasureUnit' etc.
-            datastructure_path (str, optional): Path to Python file containing
-                DATA_STRUCTURE dictionary. If provided, takes precedence over
-                datastructure parameter. Defaults to empty string.
-            projectoverview (str): Path to markdown file containing project description.
-            keyterms (str): Path to markdown file containing key terms and definitions.
+            datastructure_filename (str, optional): Filename of Python file containing
+                DATA_STRUCTURE dictionary. Will be joined with input_dir if provided.
+                Defaults to empty string.
+            projectoverview_filename (str, optional): Filename of markdown file containing
+                project description. Will be joined with input_dir if provided.
+                Defaults to empty string.
+            keyterms_filename (str, optional): Filename of markdown file containing
+                key terms and definitions. Will be joined with input_dir if provided.
+                Defaults to empty string.
+            figure_filenames (Optional[List[str]], optional): List of figure filenames to include
+                in codebook. Will be joined with input_dir if provided. Defaults to None.
+            footer_image_filename (str, optional): Filename of logo/image file to display
+                in PDF footer. Will be joined with input_dir if provided. Defaults to empty string.
             output_filename (str): Base filename for generated PDF (without extension).
             outputfolder (str, optional): Directory path for output.
                 Defaults to current working directory if not provided.
             seed (int, optional): Random seed for reproducible example generation.
                 Defaults to 15151.
-            figures (Optional[List[str]], optional): List of figure file paths to include 
-                in codebook. Figures are automatically sized and positioned in a dedicated 
-                "Figures" section before key terms. Defaults to None.
-            footer_image_path (str): Path to logo/image file to display in the PDF footer.
-                An empty string means no footer image. Supported formats: PNG, JPG, JPEG, BMP, GIF, TIF, TIFF.
-                The file must exist and be in a supported format, otherwise it will be ignored.
+            instruction_mode (bool, optional): Whether to include instruction sections
+                for missing components. Defaults to True.
         
         Returns:
             None: This is a constructor method.
@@ -86,16 +98,33 @@ class codebook():
             - Random seed affects example generation in variable summaries
         """
 
-        self.input_df = input_df
+        # Load CSV data if filename provided, otherwise use input_df
+        if input_csv_filename:
+            self.input_df = self._load_csv_data(input_csv_filename, input_dir)
+        elif input_df is not None:
+            self.input_df = input_df
+        else:
+            raise ValueError("Either input_df or input_csv_filename must be provided")
+            
         self.header_title = header_title
+        self.input_dir = input_dir if input_dir else ""
+        
+        # Build full paths and validate file existence
+        self.datastructure_path = self._build_and_validate_path(datastructure_filename)
+        self.projectoverview = self._build_and_validate_path(projectoverview_filename)
+        self.keyterms = self._build_and_validate_path(keyterms_filename)
+        self.footer_image_path = self._build_and_validate_image_path(footer_image_filename)
+        
+        # Process figure list with validation
+        self.figures = self._process_figure_list(figure_filenames)
         
         # Load data structure from file path if provided, otherwise use dict or auto-generate
-        if datastructure_path:
+        if self.datastructure_path:
             try:
-                self.datastructure = self._load_datastructure_from_file(datastructure_path)
+                self.datastructure = self._load_datastructure_from_file(self.datastructure_path)
                 self._auto_generated_structure = False
             except Exception as e:
-                print(f"Error loading datastructure from {datastructure_path}: {e}")
+                print(f"Error loading datastructure from {self.datastructure_path}: {e}")
                 print("Falling back to auto-generation.")
                 self.datastructure = self._generate_default_datastructure()
                 self._auto_generated_structure = True
@@ -106,16 +135,130 @@ class codebook():
             print("Warning: No datastructure provided. Generating default structure from DataFrame.")
             self.datastructure = self._generate_default_datastructure()
             self._auto_generated_structure = True
-            
-        self.projectoverview = projectoverview
-        self.keyterms = keyterms
+        
         self.output_filename = output_filename
-        # Default to current directory if no output folder specified
+        # Setup output folder and ensure it exists
         self.outputfolder = outputfolder if outputfolder else os.getcwd()
+        os.makedirs(self.outputfolder, exist_ok=True)
+        
+        # Build full output file path
+        self.output_filepath = os.path.join(self.outputfolder, f"{self.output_filename}.pdf")
+        
         self.seed = seed
-        self.figures = figures
-        self.footer_image_path = footer_image_path
         self.instruction_mode = instruction_mode
+
+    def _load_csv_data(self, csv_filename: str, input_dir: str = "") -> pd.DataFrame:
+        """
+        Load CSV data from filename, building full path if input_dir provided.
+        
+        Args:
+            csv_filename (str): CSV filename
+            input_dir (str, optional): Directory containing CSV file
+            
+        Returns:
+            pd.DataFrame: Loaded CSV data
+            
+        Raises:
+            FileNotFoundError: If CSV file doesn't exist
+            ValueError: If CSV cannot be loaded
+        """
+        if input_dir:
+            csv_path = os.path.join(input_dir, csv_filename)
+        else:
+            csv_path = csv_filename
+            
+        if not os.path.exists(csv_path):
+            raise FileNotFoundError(f"CSV file not found: {csv_path}")
+            
+        try:
+            return pd.read_csv(csv_path)
+        except Exception as e:
+            raise ValueError(f"Could not load CSV file {csv_path}: {e}")
+
+    def _build_and_validate_path(self, filename: str) -> str:
+        """
+        Build full path from input_dir and filename, validate existence.
+        
+        Args:
+            filename (str): Filename or relative path
+            
+        Returns:
+            str: Full path if file exists, empty string otherwise
+        """
+        if not filename:
+            return ""
+            
+        if self.input_dir:
+            full_path = os.path.join(self.input_dir, filename)
+        else:
+            full_path = filename
+            
+        return full_path if os.path.exists(full_path) else ""
+
+    def _build_and_validate_image_path(self, filename: str) -> str:
+        """
+        Build full path and validate image file format.
+        
+        Args:
+            filename (str): Image filename
+            
+        Returns:
+            str: Full path if file exists and is supported format, empty string otherwise
+        """
+        if not filename:
+            return ""
+            
+        full_path = self._build_and_validate_path(filename)
+        if not full_path:
+            return ""
+            
+        # Validate image format
+        supported_exts = {'.png', '.jpg', '.jpeg', '.bmp', '.gif', '.tif', '.tiff'}
+        file_ext = os.path.splitext(full_path)[1].lower()
+        
+        if file_ext in supported_exts:
+            return full_path
+        else:
+            print(f"Skipping unsupported image format: {filename}")
+            return ""
+
+    def _process_figure_list(self, figure_filenames: Optional[List[str]]) -> Optional[List[str]]:
+        """
+        Process and validate figure file list.
+        
+        Args:
+            figure_filenames (Optional[List[str]]): List of figure filenames
+            
+        Returns:
+            Optional[List[str]]: List of valid figure paths or None
+        """
+        if not figure_filenames:
+            return None
+            
+        figures_to_use = []
+        supported_exts = {'.png', '.jpg', '.jpeg', '.bmp', '.gif', '.tif', '.tiff'}
+        
+        for filename in figure_filenames:
+            if not filename:
+                continue
+                
+            # Build full path
+            if self.input_dir:
+                full_path = os.path.join(self.input_dir, filename)
+            else:
+                full_path = filename
+                
+            if os.path.exists(full_path):
+                file_ext = os.path.splitext(full_path)[1].lower()
+                if file_ext in supported_exts:
+                    figures_to_use.append(full_path)
+                    print(f"Added figure: {os.path.basename(full_path)}")
+                else:
+                    print(f"Skipping unsupported figure format: {os.path.basename(full_path)}")
+            else:
+                print(f"Figure not found: {full_path}")
+                
+        return figures_to_use if figures_to_use else None
 
     def _load_datastructure_from_file(self, datastructure_path: str) -> Dict[str, Dict[str, Any]]:
         """
@@ -1119,6 +1262,5 @@ class codebook():
 
 
         # Save codebook
-        codebook_filepath = os.path.join(self.outputfolder, self.output_filename + '.pdf')
-        print("Saving codebook to", codebook_filepath)
-        pdf.output(codebook_filepath)
+        print("Saving codebook to", self.output_filepath)
+        pdf.output(self.output_filepath)
