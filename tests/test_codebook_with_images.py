@@ -1,3 +1,16 @@
+"""
+******************************************************************************
+* Project: pypdfcodebook                                                     *
+* License: BSD 3-Clause License                                              *
+* Author/Maintainer: Nathanael Rosenheim                                     *
+* Copyright (c) 2025 Nathanael Rosenheim                                     *
+******************************************************************************
+
+Made with assistance from Claude Sonnet 4 LLM in VS Code Agent Mode.
+
+Date Last Modified: December 17, 2025
+"""
+
 import os
 import pandas as pd
 import importlib.util

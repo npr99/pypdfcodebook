@@ -1,10 +1,23 @@
+#!/usr/bin/env python3
+"""
+Test making a codebook without keyterms or projectoverview files.
+
+******************************************************************************
+* Project: pypdfcodebook                                                     *
+* License: BSD 3-Clause License                                              *
+* Author/Maintainer: Nathanael Rosenheim                                     *
+* Copyright (c) 2025 Nathanael Rosenheim                                     *
+******************************************************************************
+
+Made with assistance from Claude Sonnet 4 LLM in VS Code Agent Mode.
+
+Date Last Modified: December 17, 2025
+"""
+
 import pandas as pd
 from src.pypdfcodebook.pdfcb_03c_codebook import codebook
 import os
 
-'''
-Test making a codebook without keyterms or projectoverview files.
-'''
 
 def test_codebook_no_keyterms_projectoverview():
     # Sample data
