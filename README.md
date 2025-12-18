@@ -31,74 +31,88 @@ Here's a simple example to get you started:
 
 ```python
 from pypdfcodebook.pdfcb_03c_codebook import codebook
-import pandas as pd
 
-# Load your data
-data = pd.read_csv('your_data.csv')
-
-# Create a basic codebook (saves to current directory)
+# Simple approach: Use CSV filename and let codebook load the data
 cb = codebook(
-    input_df=data,
-    datastructure={},  # Your data structure dictionary
-    projectoverview='',  # Path to markdown file or empty string
-    keyterms='',  # Path to markdown file or empty string 
+    input_csv_filename='your_data.csv',  # CSV file to load
+    input_dir='./data/',  # Directory containing your files
+    datastructure_filename='data_structure.py',  # Optional: your data structure file
+    projectoverview_filename='overview.md',  # Optional: project description
+    keyterms_filename='terms.md',  # Optional: key terms
     output_filename='my_codebook'
-    # header_title is optional - defaults to "Data Codebook"
-    # outputfolder is optional - defaults to current directory
+    # Codebook automatically creates output folder and handles all path building
 )
 
 # Generate the PDF codebook
 cb.create_codebook()
 ```
 
+**Alternative: Use DataFrame directly**
+
+```python
+import pandas as pd
+
+# Load your data manually
+data = pd.read_csv('your_data.csv')
+
+# Create codebook with DataFrame
+cb = codebook(
+    input_df=data,  # Pass DataFrame directly
+    output_filename='my_codebook'
+    # All other parameters optional
+)
+cb.create_codebook()
+```
+
 ## 📖 Usage
 
-### Basic Codebook (Current Directory)
+### Minimal Setup (Auto-generated)
 
 ```python
 from pypdfcodebook.pdfcb_03c_codebook import codebook
 
-# Minimal setup - output saves to current directory
+# Ultra-minimal: Just provide CSV file, everything else auto-generated
 cb = codebook(
-    input_df=your_dataframe,
-    datastructure=your_data_structure,
-    projectoverview='',
-    keyterms='',
-    output_filename='your_codebook'
-    # header_title defaults to "Data Codebook"
+    input_csv_filename='my_data.csv',
+    output_filename='my_codebook'
+    # Automatic data structure generation
+    # Automatic instruction sections for missing components
+    # Output saves to current directory
 )
 cb.create_codebook()
 ```
 
-### Custom Output Directory
+### Organized Project Structure
 
 ```python
-# Specify custom output directory and title
+# Best practice: Organize all files in one directory
 cb = codebook(
-    input_df=your_dataframe,
-    header_title='Your Project Name',  # Optional: custom title
-    datastructure=your_data_structure,
-    projectoverview='',
-    keyterms='',
-    output_filename='your_codebook',
-    outputfolder='./custom_output_folder/'
+    input_csv_filename='survey_data.csv',
+    input_dir='./my_project/',  # One directory for all input files
+    datastructure_filename='data_structure.py',
+    projectoverview_filename='project_overview.md',
+    keyterms_filename='key_terms.md',
+    figure_filenames=['chart1.png', 'chart2.png'],  # Optional figures
+    footer_image_filename='logo.png',  # Optional footer image
+    header_title='Survey Analysis Codebook',
+    output_filename='survey_codebook',
+    outputfolder='./output/'  # Output directory (created automatically)
 )
 cb.create_codebook()
 ```
 
-### Advanced Configuration
+### DataFrame Input Alternative
 
 ```python
-# Full configuration with all options
+import pandas as pd
+
+# Use DataFrame directly instead of CSV file
+df = pd.read_csv('data.csv')  # or any other DataFrame source
+
 cb = codebook(
-    input_df=your_dataframe,
-    header_title='Comprehensive Study',
-    datastructure=your_data_structure,
-    projectoverview='path/to/overview.md',
-    keyterms='path/to/keyterms.md',
-    output_filename='comprehensive_codebook',
-    outputfolder='./output/',
-    footer_image_path='path/to/logo.png'
+    input_df=df,  # Pass DataFrame directly
+    header_title='My Analysis',
+    output_filename='dataframe_codebook'
 )
 cb.create_codebook()
 ```
@@ -122,7 +136,7 @@ This project is licensed under the Mozilla Public License 2.0 - see the [LICENSE
 
 ## 🏗️ Requirements
 
-- Python 3.9+
+- Python 3.10+
 - pandas >= 2.2.0
 - numpy >= 1.26.0
 - fpdf2 >= 2.7.0
